@@ -342,12 +342,7 @@ Use the `access_token` in the `Authorization` header as follows:
 
 ---
 
-## Note
-
-1. Ensure that tokens are included in the `Authorization` header for authenticated endpoints.  
-2. Refresh tokens should be securely stored and used only when access tokens expire.  
-3. Sessions expire after some time, so users may need to log in again to generate a new token.  
-4. Users can only modify or delete their own blog posts.  
+  
 
 
 
