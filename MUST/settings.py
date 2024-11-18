@@ -43,26 +43,27 @@ INSTALLED_APPS = [
     'rest_framework',
     'Innovation_WebApp',
     'tinymce',
-    'account',
+    'account.apps.AccountConfig',
     'blog',
     'django.contrib.sites',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
-    'allauth.socialaccount.providers.google'
+    'allauth.socialaccount.providers.google',
+    'sociallogins',
 
 ]
 
-SOCIALACCOUNT_PROVIDERS = [
-    "google":{
-        "scope":[
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "scope": [
             "profile",
-            "email"
+            "email",
         ],
+        "AUTH_PARAMS": {"access_type": "online"},
+    },
+}
 
-        "AUTH_PARAMS":{"access_type":"online"},
-    }
-]
 
 
 REST_FRAMEWORK = {
@@ -85,6 +86,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'MUST.urls'

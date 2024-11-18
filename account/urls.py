@@ -5,6 +5,5 @@ from account.views import RegisterView,LoginView
 urlpatterns = [
     path('register/',RegisterView.as_view(),name='register'),
     path('login/',LoginView.as_view(),name='login'),
-    path('login/',home),
-    path('login/',logout_view),
+   
 ]
