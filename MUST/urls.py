@@ -22,12 +22,18 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
+# urlpatterns = [
+#     path('admin/', admin.site.urls),
+#     path('',include('Innovation_WebApp.urls')),
+#     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+#     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+#     path('api/',include('Api.urls')),
+#     path('accounts/',include('allauth.urls')),
+#     path('/',include('sociallogins.urls')),
+# ]
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('',include('Innovation_WebApp.urls')),
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/',include('Api.urls')),
-    path('accounts/',include('allauth.urls')),
-    path('/',include('sociallogins.urls')),
+    path('',include('sociallogins.urls')),
+    
 ]

@@ -31,7 +31,7 @@ ALLOWED_HOSTS = []
 
 # Application definition
 
-SITE_ID = 1
+SITE_ID = 2
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -179,8 +179,28 @@ EMAIL_USE_TLS = True
 #     print(base64_image)
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
-    "allauth.accounts.auth_backends.AuthenticationBackend"
+    "allauth.account.auth_backends.AuthenticationBackend"
 )
 
 LOGIN_REDIRECT_URL = ""
 LOGOUT_REDIRECT_URL = ""
+
+
+
+
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [BASE_DIR / 'templates'],  # Add your templates directory here
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
