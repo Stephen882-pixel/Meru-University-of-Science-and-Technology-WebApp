@@ -28,7 +28,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
+REST_USE_JWT = True
 # Application definition
 
 SITE_ID = 2
@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework.authtoken',
+    'dj_rest_auth',
     'Innovation_WebApp',
     'tinymce',
     'account.apps.AccountConfig',
@@ -50,7 +52,11 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.github',
+    'oauth2_provider',
     'sociallogins',
+    'developers',
+    'corsheaders',
 
 ]
 
@@ -62,15 +68,29 @@ SOCIALACCOUNT_PROVIDERS = {
         ],
         "AUTH_PARAMS": {"access_type": "online"},
     },
+    "github": {
+        "APP": {
+            "VERIFIED_EMAIL": True,
+            "client_id": "Iv23li1X8BLSvi59LwSi",
+            "secret": "79e1a5019d46e4960a2dc677c1dfa3faaa2f407c",
+            "key": "SHA256:2lsFrpGAd3VnKkj17VbkRH3SQi+CZB6QihF2Lo6RsXM=",
+            "redirect_uri": "http://localhost:8000/accounts/github/login/callback/",
+        }
+    }
 }
 
-
+OAUTH2_PROVIDER = {
+    'SCOPES': {'read': 'Read scope', 'write': 'Write scope'},
+    'ACCESS_TOKEN_EXPIRE_SECONDS': 3600,  # 1 hour
+    'REFRESH_TOKEN_EXPIRE_SECONDS': 36000,  # 10 hours
+}
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
     ],
     # 'DEFAULT_PERMISSION_CLASSES': [
     #     'rest_framework.permissions.IsAuthenticated',
@@ -87,7 +107,10 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True #this is only for development
 
 ROOT_URLCONF = 'MUST.urls'
 
@@ -182,9 +205,9 @@ AUTHENTICATION_BACKENDS = (
     "allauth.account.auth_backends.AuthenticationBackend"
 )
 
-LOGIN_REDIRECT_URL = ""
-LOGOUT_REDIRECT_URL = ""
-
+ACCOUNT_EMAIL_VERIFICATION = "none"
+LOGIN_REDIRECT_URL = "/"  # Redirect URL after successful login
+LOGOUT_REDIRECT_URL = "/" # Redirect URL after logout
 
 
 
@@ -203,4 +226,8 @@ TEMPLATES = [
             ],
         },
     },
+
+
 ]
+
+GITHUB_REDIRECT_URI = "http://localhost:8000/accounts/github/login/callback/"

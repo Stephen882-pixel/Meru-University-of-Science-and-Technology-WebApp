@@ -14,3 +14,6 @@ cryptography
 requests-oauthlib
 google-auth
 googleauthentication
+dj-rest-auth
+django-oauth-toolkit
+django-cors-headers==4.2.0
