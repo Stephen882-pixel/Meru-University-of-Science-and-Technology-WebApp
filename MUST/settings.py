@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
+import secrets
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -90,7 +92,6 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
     ],
     # 'DEFAULT_PERMISSION_CLASSES': [
     #     'rest_framework.permissions.IsAuthenticated',
@@ -205,6 +206,9 @@ AUTHENTICATION_BACKENDS = (
     "allauth.account.auth_backends.AuthenticationBackend"
 )
 
+
+
+
 ACCOUNT_EMAIL_VERIFICATION = "none"
 LOGIN_REDIRECT_URL = "/"  # Redirect URL after successful login
 LOGOUT_REDIRECT_URL = "/" # Redirect URL after logout
@@ -231,3 +235,18 @@ TEMPLATES = [
 ]
 
 GITHUB_REDIRECT_URI = "http://localhost:8000/accounts/github/login/callback/"
+
+
+# JWT Settings
+JWT_SECRET = "4dddc6c64851c877fc8f3ebc5246c883aaa320ef13050cb99f61b5eba2d7"
+JWT_ALGORITHM = "HS256"
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=24),
+    'ALGORITHM': JWT_ALGORITHM,
+    'SIGNING_KEY': JWT_SECRET,
+    'VERIFYING_KEY': None,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+}
