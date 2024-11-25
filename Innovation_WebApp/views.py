@@ -9,18 +9,24 @@ from django.core.exceptions import ValidationError
 from django.core.files import File
 import base64
 
-class EventsViewSet(viewsets.ModelViewSet):
+# class EventsViewSet(viewsets.ModelViewSet):
+#     queryset = Events.objects.all()
+#     serializer_class = EventsSerializer
+
+#     def create(self, request, *args, **kwargs):
+#         image_file = request.FILES.get('image')
+#         if image_file:
+#             # Convert the image to base64 string
+#             image_data = image_file.read()
+#             base64_image = base64.b64encode(image_data).decode("utf-8")
+#             request.data['image'] = base64_image
+#         return super().create(request, *args, **kwargs)
+
+
+#this is the event with s3 functionality    
+class EventViewSet(viewsets.ModelViewSet):
     queryset = Events.objects.all()
     serializer_class = EventsSerializer
-
-    def create(self, request, *args, **kwargs):
-        image_file = request.FILES.get('image')
-        if image_file:
-            # Convert the image to base64 string
-            image_data = image_file.read()
-            base64_image = base64.b64encode(image_data).decode("utf-8")
-            request.data['image'] = base64_image
-        return super().create(request, *args, **kwargs)
 
 # class NewsletterSendView(views.APIView):
 #     #permission_classes = [IsAdminUser]

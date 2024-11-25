@@ -9,12 +9,12 @@ class SubscribedUsers(models.Model):
     def __str__(self):
         return self.email
 
+
 class Events(models.Model):
     name = models.CharField(max_length=100)
     title = models.CharField(max_length=200)
     description = models.TextField()
-    # image = models.TextField(upload_to='uploads/event/', null=True, blank=True)
-    image = models.TextField(null=True, blank=True)
+    image = models.URLField(default="event_images/default.png")  # S3 image URL will be stored here
     date = models.DateTimeField()
     location = models.CharField(max_length=255)
     organizer = models.CharField(max_length=100)

@@ -1,7 +1,11 @@
 from django.db import models
+
+# Create your models here.
+from django.db import models
 import uuid
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.utils import timezone
+from django.contrib.auth import get_user_model
 import secrets
 import hashlib
 
@@ -29,7 +33,7 @@ class DeveloperManager(BaseUserManager):
         return user
 
 class Developer(AbstractBaseUser):
-    developer_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)  # Auto-generated UUID
+    developer_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True,primary_key=True)  # Auto-generated UUID
     username = models.CharField(max_length=150, unique=True)
     email = models.EmailField(max_length=255, unique=True)
     date_joined = models.DateTimeField(default=timezone.now)
@@ -47,27 +51,23 @@ class Developer(AbstractBaseUser):
 
 
 
-# ADIKEY MODEL
+
+
 class APIKey(models.Model):
+    api_key_id = models.UUIDField()  # This will store the developer_id from the token
     prefix = models.CharField(max_length=8, unique=True)
     key_hash = models.CharField(max_length=64, unique=True)
-    developer_id = models.CharField(max_length=100)
     application_name = models.CharField(max_length=200)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     rate_limit = models.IntegerField(default=1000)
-    
+
     class Meta:
-        # Add a unique constraint for active keys
-        unique_together = [
-            ['developer_id', 'application_name']
-        ]
-        
-        # Optional index to improve query performance
+        unique_together = [['api_key_id', 'application_name']]
         indexes = [
-            models.Index(fields=['developer_id', 'application_name'])
+            models.Index(fields=['api_key_id', 'application_name'])
         ]
-    
+
     def __str__(self):
         return f"{self.application_name} - {self.prefix}"

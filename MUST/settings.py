@@ -35,6 +35,7 @@ REST_USE_JWT = True
 
 SITE_ID = 2
 
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -44,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
+    'rest_framework_simplejwt',
     'dj_rest_auth',
     'Innovation_WebApp',
     'tinymce',
@@ -55,12 +57,16 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
     'allauth.socialaccount.providers.github',
+    # Temporarily comment out oauth2_provider
     'oauth2_provider',
     'sociallogins',
-    'developers',
     'corsheaders',
-
+    'developers'
 ]
+
+AUTH_USER_MODEL = 'developers.Developer' 
+
+
 
 SOCIALACCOUNT_PROVIDERS = {
     "google": {
@@ -83,9 +89,22 @@ SOCIALACCOUNT_PROVIDERS = {
 
 OAUTH2_PROVIDER = {
     'SCOPES': {'read': 'Read scope', 'write': 'Write scope'},
-    'ACCESS_TOKEN_EXPIRE_SECONDS': 3600,  # 1 hour
-    'REFRESH_TOKEN_EXPIRE_SECONDS': 36000,  # 10 hours
+    'ACCESS_TOKEN_EXPIRE_SECONDS': 3600,
+    'REFRESH_TOKEN_EXPIRE_SECONDS': 36000,
+    'APPLICATION_MODEL': 'oauth2_provider.Application',
+    'ACCESS_TOKEN_MODEL': 'oauth2_provider.AccessToken',
+    'REFRESH_TOKEN_MODEL': 'oauth2_provider.RefreshToken',
+    'GRANT_MODEL': 'oauth2_provider.Grant',
+    'ID_TOKEN_MODEL': 'oauth2_provider.IDToken',
 }
+
+# Add all these individual settings as well
+OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
+OAUTH2_PROVIDER_ACCESS_TOKEN_MODEL = 'oauth2_provider.AccessToken'
+OAUTH2_PROVIDER_REFRESH_TOKEN_MODEL = 'oauth2_provider.RefreshToken'
+OAUTH2_PROVIDER_GRANT_MODEL = 'oauth2_provider.Grant'
+OAUTH2_PROVIDER_ID_TOKEN_MODEL = 'oauth2_provider.IDToken'
+
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
@@ -243,10 +262,14 @@ JWT_ALGORITHM = "HS256"
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=24),
-    'ALGORITHM': JWT_ALGORITHM,
-    'SIGNING_KEY': JWT_SECRET,
-    'VERIFYING_KEY': None,
-    'AUTH_HEADER_TYPES': ('Bearer',),
-    'USER_ID_FIELD': 'id',
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'USER_ID_FIELD': 'developer_id',
     'USER_ID_CLAIM': 'user_id',
+    'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+AWS_ACCESS_KEY_ID = "AKIA2OAJT5DJMGTLDZFP"
+AWS_SECRET_ACCESS_KEY = "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"
+AWS_STORAGE_BUCKET_NAME = "meruinnovators"

@@ -15,7 +15,7 @@ urlpatterns = [
     path('login', DeveloperLoginView.as_view(), name='developer-login'),
     path('token/refresh', TokenRefreshView.as_view(), name='token-refresh'),
     path('generate', APIKeyGeneratorView.as_view(), name='api-key-generate'),
-    path('list/', APIKeyListView.as_view(), name='api-key-list'),
+    path('list', APIKeyListView.as_view(), name='api-key-list'),
     path('<str:prefix>', APIKeyDetailView.as_view(), name='api-key-detail'),
     path('<str:prefix>/delete', APIKeyDeleteView.as_view(), name='api-key-delete'),
 ]

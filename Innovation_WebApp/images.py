@@ -1,4 +1,4 @@
-with open("C:\Users\Stephen\Download", "rb") as image_file:
+with open("/home/ephy/Downloads/Meru-University-of-Science-and-Technology-WebApp/uploads/event/ff.jpeg", "rb") as image_file:
     image_data = image_file.read()
 
     import base64
