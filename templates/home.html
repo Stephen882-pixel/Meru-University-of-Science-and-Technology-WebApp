@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    {% load socialaccount %}
+
+    <h2>Google Login</h2>
+    <a href="{% provider_login_url 'google' %}?next=/">Login with google</a>
+
+    {% if user.is_authentiacted %}
+    <p>You are signed in as {{ user.email }}</p>
+    <a href="logout">Logout</a>
+    {% endif %}
+</body>
+</html>

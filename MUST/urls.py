@@ -28,4 +28,10 @@ urlpatterns = [
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/',include('Api.urls')),
+    path('accounts/',include('allauth.urls')),
+    path('social/',include('sociallogins.urls')),
+    path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
+    path('devs/', include('developers.urls')),
 ]
+
+
