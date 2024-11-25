@@ -15,9 +15,17 @@ import os
 import secrets
 from datetime import timedelta
 
+import json
+
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+secrets_file = BASE_DIR / 'secrets.json'
+
+with open(secrets_file) as f:
+    secrets = json.load(f)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -270,6 +278,7 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-AWS_ACCESS_KEY_ID = "AKIA2OAJT5DJMGTLDZFP"
-AWS_SECRET_ACCESS_KEY = "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"
-AWS_STORAGE_BUCKET_NAME = "meruinnovators"
+AWS_ACCESS_KEY_ID = secrets['AWS_ACCESS_KEY_ID']
+AWS_SECRET_ACCESS_KEY = secrets['AWS_SECRET_ACCESS_KEY']
+AWS_STORAGE_BUCKET_NAME = secrets['AWS_STORAGE_BUCKET_NAME']
+
