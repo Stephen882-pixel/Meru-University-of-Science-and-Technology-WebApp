@@ -216,8 +216,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = 'ondeyostephen0@gmail.com'
-EMAIL_HOST_PASSWORD = 'vgwq mvyx mqvg mggy'
+EMAIL_HOST_USER = secrets['EMAIL_HOST_USER']
+EMAIL_HOST_PASSWORD = secrets['EMAIL_HOST_PASSWORD']
 EMAIL_USE_TLS = True
 #
 # with open(r"C:/Users/Stephen/Downloads/Encapsulation image.png", "rb") as image_file:
@@ -265,7 +265,7 @@ GITHUB_REDIRECT_URI = "http://localhost:8000/accounts/github/login/callback/"
 
 
 # JWT Settings
-JWT_SECRET = "4dddc6c64851c877fc8f3ebc5246c883aaa320ef13050cb99f61b5eba2d7"
+JWT_SECRET = secrets['JWT_SECRET']
 JWT_ALGORITHM = "HS256"
 
 SIMPLE_JWT = {
@@ -279,8 +279,8 @@ SIMPLE_JWT = {
 }
 
 
-# AWS_ACCESS_KEY_ID = secrets['AWS_ACCESS_KEY_ID']
-# AWS_SECRET_ACCESS_KEY = secrets['AWS_SECRET_ACCESS_KEY']
-# AWS_STORAGE_BUCKET_NAME = secrets['AWS_STORAGE_BUCKET_NAME']
+AWS_ACCESS_KEY_ID = secrets['AWS_ACCESS_KEY_ID']
+AWS_SECRET_ACCESS_KEY = secrets['AWS_SECRET_ACCESS_KEY']
+AWS_STORAGE_BUCKET_NAME = secrets['AWS_STORAGE_BUCKET_NAME']
 
 
