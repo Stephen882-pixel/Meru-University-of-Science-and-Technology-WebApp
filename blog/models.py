@@ -1,7 +1,7 @@
 from django.db import models
 import uuid
 from django.contrib.auth.models import User
-
+from django.conf import settings
 
 # Create your models here.
 class BaseModel(models.Model):
@@ -16,7 +16,7 @@ class BaseModel(models.Model):
 
 
 class Blog(BaseModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='blogs')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='blogs')
     title = models.CharField(max_length=500)
     blog_text = models.TextField()
     main_image = models.ImageField(upload_to='blogs')
