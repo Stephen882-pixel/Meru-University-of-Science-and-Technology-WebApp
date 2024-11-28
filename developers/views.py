@@ -197,7 +197,7 @@ class APIKeyDetailView(APIView):
     View to retrieve details of a specific API Key
     """
     def get(self, request, prefix):
-      
+        
         try:
             # Retrieve the API key or return 404
             api_key = get_object_or_404(APIKey, prefix=prefix)
