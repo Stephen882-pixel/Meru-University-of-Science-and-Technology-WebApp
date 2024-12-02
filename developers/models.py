@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.contrib.auth.models import PermissionsMixin
 # Create your models here.
 from django.db import models
 import uuid
@@ -32,7 +32,7 @@ class DeveloperManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-class Developer(AbstractBaseUser):
+class Developer(AbstractBaseUser,PermissionsMixin):
     developer_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True,primary_key=True)  # Auto-generated UUID
     username = models.CharField(max_length=150, unique=True)
     email = models.EmailField(max_length=255, unique=True)
