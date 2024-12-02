@@ -32,6 +32,7 @@ urlpatterns = [
     path('social/',include('sociallogins.urls')),
     path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     path('devs/', include('developers.urls')),
+    path('rsvps/', include('rsvps.urls')),
 ]
 
 
