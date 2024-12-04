@@ -69,7 +69,8 @@ INSTALLED_APPS = [
     'oauth2_provider',
     'sociallogins',
     'corsheaders',
-    'developers'
+    'developers',
+    'rsvps'
 ]
 
 AUTH_USER_MODEL = 'developers.Developer' 
