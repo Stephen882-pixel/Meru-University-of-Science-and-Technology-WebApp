@@ -1,13 +1,19 @@
+from django.http import HttpResponse
 from rest_framework import viewsets, views, status
 from rest_framework.response import Response
-from .serializers import SubscribedUsersSerializer, EventsSerializer
-from .models import SubscribedUsers, Events
+from .serializers import SubscribedUsersSerializer, EventsSerializer,EventRegistrationSerializer
+from .models import SubscribedUsers, Events,EventRegistration
 from django.core.mail import send_mail, EmailMessage
 from rest_framework.permissions import IsAdminUser,IsAuthenticated
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.core.files import File
 import base64
+from rest_framework.decorators import action
+import pandas as pd
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+
 
 # class EventsViewSet(viewsets.ModelViewSet):
 #     queryset = Events.objects.all()
@@ -98,3 +104,78 @@ class ContactView(views.APIView):
         )
 
         return Response({'message_name': message_name}, status=status.HTTP_200_OK)
+    
+
+
+from rest_framework import viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from django.http import HttpResponse
+import pandas as pd
+
+class EventRegistrationViewSet(viewsets.ModelViewSet):
+    queryset = EventRegistration.objects.all()
+    serializer_class = EventRegistrationSerializer
+
+    @action(detail=False, methods=['GET'])
+    def export_registrations(self, request):
+        event_id = request.query_params.get('event_id')
+    
+        if not event_id:
+            return Response({'error': 'Event ID is required'}, status=400)
+
+    # Filter registrations for the specific event
+        registrations = EventRegistration.objects.filter(event_id=event_id)
+    
+    # Convert to list of dictionaries with timezone-naive datetime
+        registration_data = []
+        for reg in registrations:
+            reg_dict = {
+                'full_name': reg.full_name,
+                'email': reg.email,
+                'age_bracket': reg.age_bracket,
+                'course': reg.course,
+                'educational_level': reg.educational_level,
+                'phone_number': reg.phone_number,
+                'ticket_number': str(reg.ticket_number),
+                'registration_timestamp': reg.registration_timestamp.replace(tzinfo=None) if reg.registration_timestamp else None
+            }
+            registration_data.append(reg_dict)
+    
+    # Convert to DataFrame
+        df = pd.DataFrame(registration_data)
+    
+    # Create Excel response
+        response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+         )
+        response['Content-Disposition'] = f'attachment; filename=event_registrations_{event_id}.xlsx'
+    
+    # Write DataFrame to Excel
+        df.to_excel(response, index=False)
+    
+        return response
+    
+
+def send_registration_confirmation(registration):
+    # Ticket email template
+    subject = f'Event Ticket - {registration.event.title}'
+    message = render_to_string('ticket_email.html', {
+        'registration': registration,
+        'ticket_number': registration.ticket_number,
+        'event': registration.event
+    })
+    
+    send_mail(
+        subject,
+        message,
+        'your_event_email@example.com',
+        [registration.email],
+        html_message=message
+    )
+
+
+def create(self, validated_data):
+    registration = super().create(validated_data)
+    send_registration_confirmation(registration)
+    return registration

@@ -1,8 +1,12 @@
 from rest_framework import serializers
-from .models import SubscribedUsers, Events
+
+from Innovation_WebApp.Email import send_ticket_email
+from .models import SubscribedUsers, Events,EventRegistration
 import boto3
 from django.conf import settings
 import uuid
+
+from .utils import send_ticket_email
 
 
 class SubscribedUsersSerializer(serializers.ModelSerializer):
@@ -131,3 +135,18 @@ class EventsSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+    
+
+class EventRegistrationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EventRegistration
+        fields = '__all__'
+        read_only_fields = ['uid', 'registration_timestamp', 'ticket_number']
+
+    def create(self, validated_data):
+        registration = super().create(validated_data)
+        
+        # Send ticket email
+        send_ticket_email(registration)
+        
+        return registration

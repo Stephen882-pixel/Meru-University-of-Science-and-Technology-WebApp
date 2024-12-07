@@ -21,6 +21,11 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
+from rest_framework.routers import DefaultRouter
+from Innovation_WebApp.views import EventRegistrationViewSet
+
+router = DefaultRouter()
+router.register(r'event-registrations', EventRegistrationViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -32,6 +37,9 @@ urlpatterns = [
     path('social/',include('sociallogins.urls')),
     path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     path('devs/', include('developers.urls')),
+
+
+    path('', include(router.urls)),
 ]
 
 
