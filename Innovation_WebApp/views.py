@@ -1,8 +1,8 @@
 from django.http import HttpResponse
-from rest_framework import viewsets, views, status
+from rest_framework import viewsets, views, status,permissions
 from rest_framework.response import Response
-from .serializers import SubscribedUsersSerializer, EventsSerializer,EventRegistrationSerializer
-from .models import SubscribedUsers, Events,EventRegistration
+from .serializers import CommunitySessionSerializer, SubscribedUsersSerializer, EventsSerializer,EventRegistrationSerializer,CommunityProfileSerializer,TestimonialSerializer
+from .models import SubscribedUsers, Events,EventRegistration,CommunityProfile,Testimonial
 from django.core.mail import send_mail, EmailMessage
 from rest_framework.permissions import IsAdminUser,IsAuthenticated
 from django.core.validators import validate_email
@@ -13,6 +13,8 @@ from rest_framework.decorators import action
 import pandas as pd
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
+from rest_framework.views import APIView
+
 
 
 # class EventsViewSet(viewsets.ModelViewSet):
@@ -179,3 +181,61 @@ def create(self, validated_data):
     registration = super().create(validated_data)
     send_registration_confirmation(registration)
     return registration
+
+
+class CommunityProfileViewSet(viewsets.ModelViewSet):
+    queryset = CommunityProfile.objects.all().order_by('id')
+    serializer_class = CommunityProfileSerializer
+
+    # def get_permissions(self):
+    #     if self.action in ['create', 'update', 'partial_update', 'destroy']:
+    #         permission_classes = [IsAdminUser]
+    #     else:
+    #         permission_classes = [AllowAny]
+    #     return [permission() for permission in permission_classes]
+
+class TestimonialViewSet(viewsets.ModelViewSet):
+    queryset = Testimonial.objects.filter(is_approved=True)
+    serializer_class = TestimonialSerializer
+    #permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
+
+
+# class CommunityCategoryViewSet(viewsets.ModelViewSet):
+#     queryset = CommunityCategory.objects.all()
+#     serializer_class = CommunityCategorySerializer
+    
+    # def get_permissions(self):
+    #     if self.action in ['create', 'update', 'partial_update', 'destroy']:
+    #         permission_classes = [IsAdminUser]
+    #     else:
+    #         permission_classes = [permissions.AllowAny]
+    #     return [permission() for permission in permission_classes]
+
+
+class SessionCreateView(APIView):
+    def post(self, request, community_id):
+        try:
+            # Retrieve the community by its ID
+            community = CommunityProfile.objects.get(id=community_id)
+            
+            # Serialize the session data
+            session_serializer = CommunitySessionSerializer(data=request.data)
+            
+            if session_serializer.is_valid():
+                # Save the session and associate it with the community
+                session_serializer.save(community=community)
+                return Response(session_serializer.data, status=status.HTTP_201_CREATED)
+            return Response(session_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        except CommunityProfile.DoesNotExist:
+            return Response({"detail": "Community not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+class JoinCommunityView(APIView):
+    def post(self, request, community_id):
+        # Logic to join the community
+        # You can add logic here to check if the user is allowed to join
+        return Response({"message": "Successfully joined the community"}, status=status.HTTP_201_CREATED)

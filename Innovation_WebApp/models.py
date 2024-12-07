@@ -2,7 +2,8 @@ from django.db import models
 from django.utils import timezone
 from tinymce.models import HTMLField
 import uuid
-from django.core.validators import EmailValidator
+from django.core.validators import EmailValidator,MinValueValidator, MaxValueValidator
+#from django.contrib.auth.models import User
 
 class SubscribedUsers(models.Model):
     email = models.EmailField(unique=True, max_length=100)
@@ -57,4 +58,83 @@ class EventRegistration(models.Model):
 
     def __str__(self):
         return f"{self.full_name} - {self.event.name}"
+    
+# class CommunityCategory(models.Model):
+#     name = models.CharField(max_length=100, unique=True)
+#     description = models.TextField(blank=True, null=True)
+
+#     def __str__(self):
+#         return self.name
+    
+class CommunityProfile(models.Model):
+    MEETING_TYPES = [
+        ('VIRTUAL', 'Virtual'),
+        ('PHYSICAL', 'Physical'),
+        ('HYBRID', 'Hybrid')
+    ]
+
+    name = models.CharField(max_length=200)
+    #category = models.ForeignKey(CommunityCategory, on_delete=models.SET_NULL, null=True)
+
+    community_lead = models.CharField(max_length=200)
+    co_lead = models.CharField(max_length=200, blank=True, null=True)
+
+    treasurer = models.CharField(max_length=200, blank=True, null=True)
+    secretary = models.CharField(max_length=200, blank=True, null=True)
+
+    email = models.EmailField(blank=True, null=True)
+    phone_number = models.CharField(max_length=20, blank=True, null=True)
+
+    github_link = models.URLField(blank=True, null=True)
+    linkedin_link = models.URLField(blank=True, null=True)
+
+    description = models.TextField()
+    founding_date = models.DateField(blank=True, null=True)
+
+    total_members = models.IntegerField(default=0)
+
+    is_recruiting = models.BooleanField(default=False)
+    tech_stack = models.JSONField(blank=True, null=True)
+
+    def __str__(self):
+        return self.name
+    
+    def get_sessions(self):
+        return self.sessions.all()
+    
+class CommunitySession(models.Model):
+    DAYS_OF_WEEK = [
+        ('MONDAY', 'Monday'),
+        ('TUESDAY', 'Tuesday'),
+        ('WEDNESDAY', 'Wednesday'),
+        ('THURSDAY', 'Thursday'),
+        ('FRIDAY', 'Friday'),
+        ('SATURDAY', 'Saturday'),
+        ('SUNDAY', 'Sunday')
+    ]
+
+    community = models.ForeignKey(CommunityProfile, related_name='sessions', on_delete=models.CASCADE)
+    day = models.CharField(max_length=10, choices=DAYS_OF_WEEK)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    meeting_type = models.CharField(max_length=10, choices=CommunityProfile.MEETING_TYPES)
+    location = models.CharField(max_length=200, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.community.name} - {self.get_day_display()} Session"
+    
+class Testimonial(models.Model):
+    #author = models.ForeignKey(User, on_delete=models.CASCADE)
+    community = models.ForeignKey(CommunityProfile, on_delete=models.SET_NULL, null=True, blank=True)
+    content = models.TextField()
+    rating = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        null=True,
+        blank=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_approved = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Testimonial by {self.author.username}"
 

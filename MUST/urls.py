@@ -22,10 +22,14 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 from rest_framework.routers import DefaultRouter
-from Innovation_WebApp.views import EventRegistrationViewSet
+from Innovation_WebApp.views import EventRegistrationViewSet,CommunityProfileViewSet,TestimonialViewSet,SessionCreateView,JoinCommunityView
 
 router = DefaultRouter()
 router.register(r'event-registrations', EventRegistrationViewSet)
+
+router.register(r'communities', CommunityProfileViewSet)
+#router.register(r'community-categories', CommunityCategoryViewSet)
+router.register(r'testimonials', TestimonialViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -39,7 +43,11 @@ urlpatterns = [
     path('devs/', include('developers.urls')),
 
 
+
+
     path('', include(router.urls)),
+    path('communities/<int:community_id>/sessions/', SessionCreateView.as_view(), name='create_community_session'),
+    path('communities/<int:community_id>/join/', JoinCommunityView.as_view(), name='join-community'),
 ]
 
 

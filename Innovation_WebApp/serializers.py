@@ -1,7 +1,8 @@
+from requests import Session
 from rest_framework import serializers
 
 from Innovation_WebApp.Email import send_ticket_email
-from .models import SubscribedUsers, Events,EventRegistration
+from .models import SubscribedUsers, Events,EventRegistration,CommunityProfile,CommunitySession,Testimonial
 import boto3
 from django.conf import settings
 import uuid
@@ -150,3 +151,57 @@ class EventRegistrationSerializer(serializers.ModelSerializer):
         send_ticket_email(registration)
         
         return registration
+    
+class CommunitySessionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CommunitySession
+        fields = ['day', 'start_time', 'end_time', 'meeting_type', 'location']
+
+class CommunityProfileSerializer(serializers.ModelSerializer):
+    sessions = CommunitySessionSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = CommunityProfile
+        fields = [
+            'id', 'name','community_lead', 'co_lead', 
+            'treasurer', 'secretary', 'email', 'phone_number', 
+            'github_link', 'linkedin_link', 'description', 
+            'founding_date', 'total_members', 'is_recruiting', 
+            'tech_stack', 'sessions'
+        ]
+
+    def create(self, validated_data):
+        sessions_data = validated_data.pop('sessions',[])
+        community = CommunityProfile.objects.create(**validated_data)
+        for session_data in sessions_data:
+            Session.objects.create(community=community, **session_data)
+        return community
+
+    def update(self, instance, validated_data):
+        sessions_data = validated_data.pop('sessions', [])
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        # Update sessions
+        instance.sessions.all().delete()  # Clear existing sessions
+        for session_data in sessions_data:
+            Session.objects.create(community=instance, **session_data)
+
+        return instance
+
+class TestimonialSerializer(serializers.ModelSerializer):
+    #author_username = serializers.ReadOnlyField(source='author.username')
+    
+    class Meta:
+        model = Testimonial
+        # fields = [
+        #     'id', 'author_username', 'community', 
+        #     'content', 'rating', 'created_at'
+        # ]
+        # read_only_fields = ['author', 'created_at']
+
+# class CommunityCategorySerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = CommunityCategory
+#         fields = ['id', 'name', 'description']
