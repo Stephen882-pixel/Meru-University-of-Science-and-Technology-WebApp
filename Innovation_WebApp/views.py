@@ -127,7 +127,7 @@ class EventRegistrationViewSet(viewsets.ModelViewSet):
     # Filter registrations for the specific event
         registrations = EventRegistration.objects.filter(event_id=event_id)
     
-    # Convert to list of dictionaries with timezone-naive datetime
+    
         registration_data = []
         for reg in registrations:
             reg_dict = {
@@ -142,16 +142,16 @@ class EventRegistrationViewSet(viewsets.ModelViewSet):
             }
             registration_data.append(reg_dict)
     
-    # Convert to DataFrame
+  
         df = pd.DataFrame(registration_data)
     
-    # Create Excel response
+  
         response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
          )
         response['Content-Disposition'] = f'attachment; filename=event_registrations_{event_id}.xlsx'
     
-    # Write DataFrame to Excel
+  
         df.to_excel(response, index=False)
     
         return response
