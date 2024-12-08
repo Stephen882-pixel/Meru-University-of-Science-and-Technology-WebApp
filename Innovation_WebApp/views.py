@@ -1,7 +1,7 @@
 from django.http import HttpResponse
 from rest_framework import viewsets, views, status,permissions
 from rest_framework.response import Response
-from .serializers import CommunitySessionSerializer, SubscribedUsersSerializer, EventsSerializer,EventRegistrationSerializer,CommunityProfileSerializer,TestimonialSerializer
+from .serializers import CommunityJoinSerializer, CommunityMemberSerializer, CommunitySessionSerializer, SubscribedUsersSerializer, EventsSerializer,EventRegistrationSerializer,CommunityProfileSerializer,TestimonialSerializer
 from .models import SubscribedUsers, Events,EventRegistration,CommunityProfile,Testimonial
 from django.core.mail import send_mail, EmailMessage
 from rest_framework.permissions import IsAdminUser,IsAuthenticated
@@ -234,8 +234,26 @@ class SessionCreateView(APIView):
         except CommunityProfile.DoesNotExist:
             return Response({"detail": "Community not found."}, status=status.HTTP_404_NOT_FOUND)
         
+
+    
+
+class CommunityMembersView(APIView):
+    def get(self, request, pk):
+        try:
+            community = CommunityProfile.objects.get(pk=pk)
+        except CommunityProfile.DoesNotExist:
+            return Response({"error": "Community not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        members = community.members.all()  # Fetch related members
+        serializer = CommunityMemberSerializer(members, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
 class JoinCommunityView(APIView):
-    def post(self, request, community_id):
-        # Logic to join the community
-        # You can add logic here to check if the user is allowed to join
-        return Response({"message": "Successfully joined the community"}, status=status.HTTP_201_CREATED)
+    def post(self, request, *args, **kwargs):
+        print("POST request received")
+        serializer = CommunityJoinSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Successfully joined the community!"}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

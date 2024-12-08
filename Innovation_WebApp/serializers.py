@@ -2,7 +2,7 @@ from requests import Session
 from rest_framework import serializers
 
 from Innovation_WebApp.Email import send_ticket_email
-from .models import SubscribedUsers, Events,EventRegistration,CommunityProfile,CommunitySession,Testimonial
+from .models import CommunityMember, SubscribedUsers, Events,EventRegistration,CommunityProfile,CommunitySession,Testimonial
 import boto3
 from django.conf import settings
 import uuid
@@ -157,8 +157,14 @@ class CommunitySessionSerializer(serializers.ModelSerializer):
         model = CommunitySession
         fields = ['day', 'start_time', 'end_time', 'meeting_type', 'location']
 
+class CommunityMemberSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CommunityMember
+        fields = ['id', 'name', 'email', 'joined_at']
+
 class CommunityProfileSerializer(serializers.ModelSerializer):
     sessions = CommunitySessionSerializer(many=True, read_only=True)
+    members = CommunityMemberSerializer(many=True, read_only=True)
     
     class Meta:
         model = CommunityProfile
@@ -167,11 +173,16 @@ class CommunityProfileSerializer(serializers.ModelSerializer):
             'treasurer', 'secretary', 'email', 'phone_number', 
             'github_link', 'linkedin_link', 'description', 
             'founding_date', 'total_members', 'is_recruiting', 
-            'tech_stack', 'sessions'
+            'tech_stack', 'sessions','members'
         ]
+
+    def get_total_members(self, obj):
+        # Dynamically calculate total number of members related to the community
+        return obj.members.count()
 
     def create(self, validated_data):
         sessions_data = validated_data.pop('sessions',[])
+        members_data = validated_data.pop('members', []) 
         community = CommunityProfile.objects.create(**validated_data)
         for session_data in sessions_data:
             Session.objects.create(community=community, **session_data)
@@ -179,6 +190,7 @@ class CommunityProfileSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         sessions_data = validated_data.pop('sessions', [])
+        members_data = validated_data.pop('members', [])
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
@@ -187,6 +199,10 @@ class CommunityProfileSerializer(serializers.ModelSerializer):
         instance.sessions.all().delete()  # Clear existing sessions
         for session_data in sessions_data:
             Session.objects.create(community=instance, **session_data)
+        
+        instance.members.all().delete()  # Delete existing members
+        for member_data in members_data:
+            CommunityMember.objects.create(community=instance, **member_data)
 
         return instance
 
@@ -205,3 +221,11 @@ class TestimonialSerializer(serializers.ModelSerializer):
 #     class Meta:
 #         model = CommunityCategory
 #         fields = ['id', 'name', 'description']
+
+
+
+
+class CommunityJoinSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CommunityMember
+        fields = ['community', 'name', 'email']

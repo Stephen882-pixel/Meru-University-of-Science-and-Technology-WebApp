@@ -137,4 +137,14 @@ class Testimonial(models.Model):
 
     def __str__(self):
         return f"Testimonial by {self.author.username}"
+    
+
+class CommunityMember(models.Model):
+    community = models.ForeignKey(CommunityProfile, related_name='members', on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    joined_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.community.name})"
 
