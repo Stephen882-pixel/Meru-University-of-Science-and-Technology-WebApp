@@ -1,8 +1,7 @@
+# serializers.py
 from rest_framework import serializers
-from django.contrib.auth.models import User
-from django.contrib.auth import authenticate
+from .models import NormalUser
 from rest_framework_simplejwt.tokens import RefreshToken
-
 
 class RegisterSerializer(serializers.Serializer):
     firstname = serializers.CharField(max_length=50)
@@ -12,47 +11,47 @@ class RegisterSerializer(serializers.Serializer):
     password = serializers.CharField()
 
     def validate(self, data):
-        if User.objects.filter(username=data['username']).exists():
+        if NormalUser.objects.filter(username=data['username']).exists():
             raise serializers.ValidationError("Username already exists")
-        if User.objects.filter(email=data['email']).exists():
+        if NormalUser.objects.filter(email=data['email']).exists():
             raise serializers.ValidationError("Email already exists")
         return data
 
     def create(self, validated_data):
-        user = User.objects.create(
+        user = NormalUser(
             first_name=validated_data['firstname'],
             last_name=validated_data['lastname'],
             email=validated_data['email'],
             username=validated_data['username'].lower()
         )
         user.set_password(validated_data['password'])
-        user.save()  # Don't forget to save the user!
+        user.save()
         return validated_data
-
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField()
 
     def validate(self, data):
-        # Get user by email
         try:
-            user = User.objects.get(email=data['email'])
-        except User.DoesNotExist:
+            user = NormalUser.objects.get(email=data['email'])
+        except NormalUser.DoesNotExist:
             raise serializers.ValidationError("Account does not exist")
-        
-        # Check if the credentials are valid
-        user = authenticate(username=user.username, password=data['password'])
-        if not user:
+
+        if not user.check_password(data['password']):
             raise serializers.ValidationError("Invalid credentials")
-        
-        # Add user to validated data for use in view
+
         data['user'] = user
         return data
 
     def get_jwt_token(self, validated_data):
         user = validated_data['user']
-        refresh = RefreshToken.for_user(user)
+        # Create custom claims for JWT token
+        refresh = RefreshToken()
+        refresh['user_id'] = str(user.user_id)
+        refresh['email'] = user.email
+        refresh['username'] = user.username
+        refresh['type'] = 'normal_user'  # To distinguish from developer tokens
 
         return {
             'message': 'Login successful',
@@ -63,5 +62,3 @@ class LoginSerializer(serializers.Serializer):
                 }
             }
         }
-
-

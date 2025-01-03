@@ -50,3 +50,6 @@ tzdata==2024.2
 uritemplate==3.0.1
 urllib3==2.2.3
 boto3
+qrcode
+pillow
+reportlab

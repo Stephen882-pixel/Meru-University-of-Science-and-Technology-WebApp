@@ -77,6 +77,7 @@ AUTH_USER_MODEL = 'developers.Developer'
 
 
 
+
 SOCIALACCOUNT_PROVIDERS = {
     "google": {
         "scope": [

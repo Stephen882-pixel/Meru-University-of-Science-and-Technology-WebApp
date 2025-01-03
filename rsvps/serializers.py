@@ -13,3 +13,7 @@ class EventRSVPSerializer(serializers.ModelSerializer):
     class Meta:
         model = Events
         fields = ['id', 'rsvps']
+
+
+
+
