@@ -42,34 +42,29 @@ class BlogView(APIView):
 
     def post(self, request):
         try:
-            data = request.data
-            data['user'] = request.user.id
-            serializer = BlogSerializer(data=data)
-            if not serializer.is_valid():
+        # Create a mutable copy of request data
+             data = request.data.copy()
+             data['user'] = request.user.id
+        
+             serializer = BlogSerializer(data=data)
+        
+             if not serializer.is_valid():
                 return Response({
-                    'data': serializer.errors,
-                    'message': 'something went wrong'
+                'data': serializer.errors,
+                'message': 'Validation failed'
                 }, status=status.HTTP_400_BAD_REQUEST)
 
-            serializer.save()
-            return Response({
-                'data': serializer.data,
-                'message': 'blog created successfully'
-            },status=status.HTTP_201_CREATED)
-
-            print("#########")
-            print(request.user)
-            print("#########")
-            serializer = BlogSerializer(data=data)
-            return Response()
+             serializer.save()
+             return Response({
+             'data': serializer.data,
+             'message': 'Blog created successfully'
+             }, status=status.HTTP_201_CREATED)
 
         except Exception as e:
-            print(e)
-            if not serializer.is_valid():
-                return Response({
-                    'data': {},
-                    'message': 'something went wrong'
-                }, status=status.HTTP_400_BAD_REQUEST)
+             return Response({
+            'data': {},
+            'message': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     
     def patch(self, request):

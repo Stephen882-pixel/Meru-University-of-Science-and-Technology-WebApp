@@ -20,6 +20,7 @@ from django.urls import path,include
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
+    TokenVerifyView
 )
 from rest_framework.routers import DefaultRouter
 from Innovation_WebApp.views import CommunityMembersView, EventRegistrationViewSet,CommunityProfileViewSet,TestimonialViewSet,SessionCreateView,JoinCommunityView
@@ -34,13 +35,18 @@ router.register(r'testimonials', TestimonialViewSet)
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('',include('Innovation_WebApp.urls')),
+    path('api/',include('Api.urls')),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/',include('Api.urls')),
-    path('accounts/',include('allauth.urls')),
-    path('social/',include('sociallogins.urls')),
-    path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
-    path('devs/', include('developers.urls')),
+    path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
+
+
+
+    # path('api/',include('Api.urls')),
+    # path('accounts/',include('allauth.urls')),
+    # path('social/',include('sociallogins.urls')),
+    # path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
+    # path('devs/', include('developers.urls')),
 
 
 
@@ -49,6 +55,10 @@ urlpatterns = [
     path('communities/<int:community_id>/sessions/', SessionCreateView.as_view(), name='create_community_session'),
     path('communities/<int:pk>/members/', CommunityMembersView.as_view(), name='community-members'),
     path('communities/<int:pk>/join/', JoinCommunityView.as_view(), name='join-community'),
+
+
+
+
 ]
 
 

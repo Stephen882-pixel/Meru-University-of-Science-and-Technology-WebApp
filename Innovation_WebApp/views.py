@@ -162,19 +162,24 @@ class EventRegistrationViewSet(viewsets.ModelViewSet):
 def send_registration_confirmation(registration):
     # Ticket email template
     subject = f'Event Ticket - {registration.event.title}'
+    'Meru University Science Innovators Club <your_event_email@example.com>',
     message = render_to_string('ticket_email.html', {
         'registration': registration,
         'ticket_number': registration.ticket_number,
         'event': registration.event
     })
     
+    # Use the recipient's email address
+    recipient_email = registration.attendee.email  # Assuming you have the attendee's email
+    
     send_mail(
         subject,
         message,
-        'your_event_email@example.com',
-        [registration.email],
+        'Meru University Science Innovators Club <your_event_email@example.com>',  # Sender name and email
+        #[recipient_email],  # List of recipient emails
         html_message=message
     )
+
 
 
 def create(self, validated_data):
@@ -251,9 +256,13 @@ class CommunityMembersView(APIView):
 
 class JoinCommunityView(APIView):
     def post(self, request, *args, **kwargs):
-        print("POST request received")
         serializer = CommunityJoinSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            member = serializer.save()
+            
+            # Update total members for the community
+            community = member.community
+            community.update_total_members()
+            
             return Response({"message": "Successfully joined the community!"}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

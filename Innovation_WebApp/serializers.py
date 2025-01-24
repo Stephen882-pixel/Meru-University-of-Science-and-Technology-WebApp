@@ -169,41 +169,53 @@ class CommunityProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = CommunityProfile
         fields = [
-            'id', 'name','community_lead', 'co_lead', 
+            'id', 'name', 'community_lead', 'co_lead', 
             'treasurer', 'secretary', 'email', 'phone_number', 
             'github_link', 'linkedin_link', 'description', 
-            'founding_date', 'total_members', 'is_recruiting', 
-            'tech_stack', 'sessions','members'
+            'founding_date',  'is_recruiting', 
+            'tech_stack','members','total_members','sessions'
         ]
 
-    def get_total_members(self, obj):
-        # Dynamically calculate total number of members related to the community
-        return obj.members.count()
-
     def create(self, validated_data):
-        sessions_data = validated_data.pop('sessions',[])
+        sessions_data = validated_data.pop('sessions', [])
         members_data = validated_data.pop('members', []) 
         community = CommunityProfile.objects.create(**validated_data)
+        
+        # Create sessions
         for session_data in sessions_data:
             Session.objects.create(community=community, **session_data)
+        
+        #Create members
+        for member_data in members_data:
+            CommunityMember.objects.create(community=community, **member_data)
+        
+        #Update total members
+        community.update_total_members()
+        
         return community
 
     def update(self, instance, validated_data):
         sessions_data = validated_data.pop('sessions', [])
         members_data = validated_data.pop('members', [])
+        
+        # Update community profile attributes
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
 
         # Update sessions
-        instance.sessions.all().delete()  # Clear existing sessions
+        instance.sessions.all().delete()
         for session_data in sessions_data:
             Session.objects.create(community=instance, **session_data)
         
-        instance.members.all().delete()  # Delete existing members
+        # Update members
+        instance.members.all().delete()
         for member_data in members_data:
             CommunityMember.objects.create(community=instance, **member_data)
-
+        
+        # Update total members
+        instance.update_total_members()
+        
         return instance
 
 class TestimonialSerializer(serializers.ModelSerializer):

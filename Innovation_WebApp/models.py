@@ -3,6 +3,9 @@ from django.utils import timezone
 from tinymce.models import HTMLField
 import uuid
 from django.core.validators import EmailValidator,MinValueValidator, MaxValueValidator
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+
 #from django.contrib.auth.models import User
 
 class SubscribedUsers(models.Model):
@@ -74,33 +77,43 @@ class CommunityProfile(models.Model):
     ]
 
     name = models.CharField(max_length=200)
-    #category = models.ForeignKey(CommunityCategory, on_delete=models.SET_NULL, null=True)
-
     community_lead = models.CharField(max_length=200)
     co_lead = models.CharField(max_length=200, blank=True, null=True)
-
     treasurer = models.CharField(max_length=200, blank=True, null=True)
     secretary = models.CharField(max_length=200, blank=True, null=True)
-
     email = models.EmailField(blank=True, null=True)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
-
     github_link = models.URLField(blank=True, null=True)
     linkedin_link = models.URLField(blank=True, null=True)
-
     description = models.TextField()
     founding_date = models.DateField(blank=True, null=True)
-
     total_members = models.IntegerField(default=0)
-
     is_recruiting = models.BooleanField(default=False)
     tech_stack = models.JSONField(blank=True, null=True)
+
+    def update_total_members(self):
+        current_count = self.members.count()
+        if self.total_members != current_count:
+            CommunityProfile.objects.filter(id=self.id).update(total_members=current_count)
+
+    def save(self, *args, **kwargs):
+        if not self.pk:  # Only for new instances
+            super().save(*args, **kwargs)
+            self.update_total_members()
+        else:
+            super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
     
     def get_sessions(self):
         return self.sessions.all()
+    
+    @receiver([post_save, post_delete], sender='Innovation_WebApp.CommunityMember')
+    def update_community_member_count(sender, instance, **kwargs):
+        if instance.community:
+            instance.community.update_total_members()
+    
     
 class CommunitySession(models.Model):
     DAYS_OF_WEEK = [
@@ -140,11 +153,14 @@ class Testimonial(models.Model):
     
 
 class CommunityMember(models.Model):
-    community = models.ForeignKey(CommunityProfile, related_name='members', on_delete=models.CASCADE)
+    community = models.ForeignKey(CommunityProfile, related_name='members', on_delete=models.CASCADE,null=True)
     name = models.CharField(max_length=100)
     email = models.EmailField()
     joined_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.name} ({self.community.name})"
+    
+
+
 

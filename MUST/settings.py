@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'dj_rest_auth',
     'Innovation_WebApp',
     'tinymce',
@@ -69,10 +70,10 @@ INSTALLED_APPS = [
     'oauth2_provider',
     'sociallogins',
     'corsheaders',
-    'developers'
+    #'developers'
 ]
 
-AUTH_USER_MODEL = 'developers.Developer' 
+#AUTH_USER_MODEL = 'account.Account' 
 
 
 
@@ -125,6 +126,26 @@ REST_FRAMEWORK = {
     # ],
 
 }
+
+# AUTHENTICATION_BACKENDS = [
+#     'account.backends.EmailBackend',
+#     'django.contrib.auth.backends.ModelBackend',  # Keep the default backend as fallback
+# ]
+
+AUTHENTICATION_BACKENDS = ['path.to.EmailBackend']
+
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+}
+
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -268,15 +289,18 @@ GITHUB_REDIRECT_URI = "http://localhost:8000/accounts/github/login/callback/"
 JWT_SECRET = secrets['JWT_SECRET']
 JWT_ALGORITHM = "HS256"
 
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=24),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-    'ALGORITHM': 'HS256',
-    'SIGNING_KEY': SECRET_KEY,
-    'USER_ID_FIELD': 'developer_id',
-    'USER_ID_CLAIM': 'user_id',
-    'AUTH_HEADER_TYPES': ('Bearer',),
-}
+# SIMPLE_JWT = {
+#     'ACCESS_TOKEN_LIFETIME': timedelta(hours=24),
+#     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+#     'ALGORITHM': 'HS256',
+#     'SIGNING_KEY': SECRET_KEY,
+#     'USER_ID_FIELD': 'developer_id',
+#     'USER_ID_CLAIM': 'user_id',
+#     'AUTH_HEADER_TYPES': ('Bearer',),
+# }
+
+
+
 
 
 AWS_ACCESS_KEY_ID = secrets['AWS_ACCESS_KEY_ID']
