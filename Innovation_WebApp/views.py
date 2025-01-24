@@ -256,13 +256,29 @@ class CommunityMembersView(APIView):
 
 class JoinCommunityView(APIView):
     def post(self, request, *args, **kwargs):
-        serializer = CommunityJoinSerializer(data=request.data)
+        community_id = kwargs.get('pk')  # Assuming URL pattern passes community ID
+        
+        try:
+            community = CommunityProfile.objects.get(id=community_id)
+        except CommunityProfile.DoesNotExist:
+            return Response(
+                {"error": "Community not found"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        serializer = CommunityJoinSerializer(data={
+            'community': community.id,
+            'name': request.data.get('name'),
+            'email': request.data.get('email')
+        })
+        
         if serializer.is_valid():
-            member = serializer.save()
-            
-            # Update total members for the community
-            community = member.community
+            member = serializer.save(community=community)
             community.update_total_members()
             
-            return Response({"message": "Successfully joined the community!"}, status=status.HTTP_201_CREATED)
+            return Response(
+                {"message": "Successfully joined the community!"}, 
+                status=status.HTTP_201_CREATED
+            )
+        
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
