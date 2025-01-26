@@ -133,9 +133,11 @@ class EventsSerializer(serializers.ModelSerializer):
         return instance
     
 class CommentSerializer(serializers.ModelSerializer):
-    user = serializers.ReadOnlyField(source='user.username')
+    post_id = serializers.IntegerField(write_only=True, required=False)  # For creating comments
+    user_id = serializers.UUIDField(write_only=True, required=False)  # For creating comments
+    comment_id = serializers.IntegerField(write_only=True, required=False)  # For updating/deleting comments
 
     class Meta:
         model = Comment
-        fields = []
-    
+        fields = ['id', 'post_id', 'user_id', 'comment_id', 'text', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']  # These fields are managed by the server
