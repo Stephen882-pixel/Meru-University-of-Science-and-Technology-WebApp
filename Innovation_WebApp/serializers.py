@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import SubscribedUsers, Events
+from .models import SubscribedUsers, Events,Comment
 import boto3
 from django.conf import settings
 import uuid
@@ -131,3 +131,11 @@ class EventsSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+    
+class CommentSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source='user.username')
+
+    class Meta:
+        model = Comment
+        fields = []
+    
