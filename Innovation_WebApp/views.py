@@ -9,6 +9,7 @@ from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.core.files import File
 import base64
+from uuid import UUID
 
 # class EventsViewSet(viewsets.ModelViewSet):
 #     queryset = Events.objects.all()
@@ -105,23 +106,31 @@ class ContactView(views.APIView):
 class CommentCreateView(generics.CreateAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-   
 
     def perform_create(self, serializer):
-        post_id = serializer.validated_data.get('post_id')
-        user_id = serializer.validated_data.get('user_id')
+        post_id = serializer.validated_data.get('post')
+        user_id = serializer.validated_data.get('user')
+
+        if post_id is None:
+            raise serializers.ValidationError("post is required.")
+        if user_id is None:
+            raise serializers.ValidationError("user is required.")
 
         try:
             post = Events.objects.get(id=post_id)
-            user = NormalUser.objects.get(user_id=user_id)
-        except (Events.DoesNotExist, NormalUser.DoesNotExist):
-            raise serializers.ValidationError("Invalid post_id or user_id.")
+        except Events.DoesNotExist as e:
+            raise serializers.ValidationError(f"Invalid post. {str(e)}")
 
-        # Ensure the authenticated user matches the user_id in the request
-        # if user != self.request.user:
-        #     raise serializers.ValidationError("You can only create comments for yourself.")
+        try:
+            user = NormalUser.objects.get(user_id=user_id)
+        except NormalUser.DoesNotExist as e:
+            raise serializers.ValidationError(f"Invalid user. {str(e)}")
 
         serializer.save(post=post, user=user)
+
+
+
+
 
 # Update a Comment
 class CommentUpdateView(generics.UpdateAPIView):
