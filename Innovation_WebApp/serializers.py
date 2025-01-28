@@ -134,7 +134,8 @@ class EventsSerializer(serializers.ModelSerializer):
         return instance
     
 class CommentSerializer(serializers.ModelSerializer):
-    post = serializers.IntegerField(write_only=True)  # For creating comments
+    post = serializers.IntegerField(write_only=True)
+  # For creating comments
     user = serializers.UUIDField(write_only=True)  # Use UUIDField for user_id
     
     class Meta:

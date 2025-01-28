@@ -62,3 +62,8 @@ class LoginSerializer(serializers.Serializer):
                 }
             }
         }
+    
+class NormalUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NormalUser
+        fields = ['user_id', 'username', 'email', 'first_name', 'last_name']  # Add fields you want to expose

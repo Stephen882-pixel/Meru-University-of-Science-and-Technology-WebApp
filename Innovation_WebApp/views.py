@@ -107,26 +107,63 @@ class CommentCreateView(generics.CreateAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
 
+
     def perform_create(self, serializer):
         post_id = serializer.validated_data.get('post')
-        user_id = serializer.validated_data.get('user')
+        users_id = serializer.validated_data.get('user')
 
         if post_id is None:
-            raise serializers.ValidationError("post is required.")
-        if user_id is None:
-            raise serializers.ValidationError("user is required.")
+            raise serializers.ValidationError("Post ID is required.")
+        if users_id is None:
+            raise serializers.ValidationError("User ID is required.")
+
+        print(f"Received post_id: {post_id} of type {type(post_id)}, user_id: {users_id} of type {type(users_id)}")
 
         try:
             post = Events.objects.get(id=post_id)
-        except Events.DoesNotExist as e:
-            raise serializers.ValidationError(f"Invalid post. {str(e)}")
+        except Events.DoesNotExist:
+            raise serializers.ValidationError({"error": f"Invalid post. No event with id {post_id} exists."})
 
         try:
-            user = NormalUser.objects.get(user_id=user_id)
-        except NormalUser.DoesNotExist as e:
-            raise serializers.ValidationError(f"Invalid user. {str(e)}")
+            print(users_id)
+            user = NormalUser.objects.get(user_id=users_id)
+        except NormalUser.DoesNotExist:
+            print(users_id)
+            user = NormalUser.objects.get(user_id=users_id)
+            raise serializers.ValidationError({"error": f"Invalid user. No user with id {users_id} exists."})
 
         serializer.save(post=post, user=user)
+
+
+    # def perform_create(self, serializer):
+    
+    #     post_id = serializer.validated_data.get('post')
+    #     user_id = serializer.validated_data.get('user')
+
+    #     if post_id is None:
+    #         raise serializers.ValidationError("post is required.")
+    #     if user_id is None:
+    #         raise serializers.ValidationError("user is required.")
+
+    #     try:
+    #         post = Events.objects.get(id=post_id)
+    #     except Events.DoesNotExist as e:
+    #         raise serializers.ValidationError(
+    #             {
+    #                 "error":f"Invalid post. {str(e)}"
+    #             }
+    #         )
+
+    #     try:
+    #         user = NormalUser.objects.get(user_id=user_id)
+    #     except NormalUser.DoesNotExist as e:
+    #         raise serializers.ValidationError(
+    #             {
+    #                 "error":f"Invalid post. {str(e)}"
+    #             }
+    #         )
+
+    #     serializer.save(post=post, user=user)
 
 
 
