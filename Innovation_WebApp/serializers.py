@@ -1,8 +1,9 @@
 from rest_framework import serializers
-from .models import SubscribedUsers, Events
+from .models import SubscribedUsers, Events,Comment
 import boto3
 from django.conf import settings
 import uuid
+from account.models import NormalUser
 
 
 class SubscribedUsersSerializer(serializers.ModelSerializer):
@@ -131,3 +132,15 @@ class EventsSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+    
+class CommentSerializer(serializers.ModelSerializer):
+    post = serializers.IntegerField(write_only=True)
+  # For creating comments
+    user = serializers.UUIDField(write_only=True)  # Use UUIDField for user_id
+    
+    class Meta:
+        model = Comment
+        fields = ['id', 'post', 'user', 'text', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+

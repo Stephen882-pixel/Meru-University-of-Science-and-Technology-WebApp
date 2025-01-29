@@ -10,4 +10,7 @@ urlpatterns = [
     path('newsletter/', views.NewsletterSendView.as_view(), name='newsletter'),
     path('subscribe/', views.SubscribeView.as_view(), name='subscribe'),
     path('contact/', views.ContactView.as_view(), name='contact'),
+    path('comments/create/', views.CommentCreateView.as_view(), name='comment-create'),
+    path('comments/update/', views.CommentUpdateView.as_view(), name='comment-update'),
+    path('comments/delete/', views.CommentDeleteView.as_view(), name='comment-delete'),
 ]

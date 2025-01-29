@@ -2,7 +2,9 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import RegisterSerializer, LoginSerializer
+from .serializers import RegisterSerializer, LoginSerializer,NormalUserSerializer
+from .models import NormalUser
+from rest_framework.generics import ListAPIView
 
 class RegisterView(APIView):
     def post(self, request):
@@ -42,3 +44,7 @@ class LoginView(APIView):
                 'data': {},
                 'message': str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+class UserListView(ListAPIView):
+    queryset = NormalUser.objects.all()
+    serializer_class = NormalUserSerializer

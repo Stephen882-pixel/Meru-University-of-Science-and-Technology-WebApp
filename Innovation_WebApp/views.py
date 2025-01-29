@@ -1,13 +1,15 @@
-from rest_framework import viewsets, views, status
+from rest_framework import viewsets, views, status,generics,serializers
 from rest_framework.response import Response
-from .serializers import SubscribedUsersSerializer, EventsSerializer
-from .models import SubscribedUsers, Events
+from .serializers import SubscribedUsersSerializer, EventsSerializer,CommentSerializer
+from account.models import NormalUser
+from .models import SubscribedUsers, Events,Comment
 from django.core.mail import send_mail, EmailMessage
 from rest_framework.permissions import IsAdminUser,IsAuthenticated
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.core.files import File
 import base64
+from uuid import UUID
 
 # class EventsViewSet(viewsets.ModelViewSet):
 #     queryset = Events.objects.all()
@@ -98,3 +100,105 @@ class ContactView(views.APIView):
         )
 
         return Response({'message_name': message_name}, status=status.HTTP_200_OK)
+    
+
+#COMMENTS APIS
+class CommentCreateView(generics.CreateAPIView):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+
+
+    def perform_create(self, serializer):
+        post_id = serializer.validated_data.get('post')
+        users_id = serializer.validated_data.get('user')
+
+        if post_id is None:
+            raise serializers.ValidationError("Post ID is required.")
+        if users_id is None:
+            raise serializers.ValidationError("User ID is required.")
+
+        print(f"Received post_id: {post_id} of type {type(post_id)}, user_id: {users_id} of type {type(users_id)}")
+
+        try:
+            post = Events.objects.get(id=post_id)
+        except Events.DoesNotExist:
+            raise serializers.ValidationError({"error": f"Invalid post. No event with id {post_id} exists."})
+
+        try:
+            print(users_id)
+            user = NormalUser.objects.get(user_id=users_id)
+        except NormalUser.DoesNotExist:
+            print(users_id)
+            user = NormalUser.objects.get(user_id=users_id)
+            raise serializers.ValidationError({"error": f"Invalid user. No user with id {users_id} exists."})
+
+        serializer.save(post=post, user=user)
+
+
+    # def perform_create(self, serializer):
+    
+    #     post_id = serializer.validated_data.get('post')
+    #     user_id = serializer.validated_data.get('user')
+
+    #     if post_id is None:
+    #         raise serializers.ValidationError("post is required.")
+    #     if user_id is None:
+    #         raise serializers.ValidationError("user is required.")
+
+    #     try:
+    #         post = Events.objects.get(id=post_id)
+    #     except Events.DoesNotExist as e:
+    #         raise serializers.ValidationError(
+    #             {
+    #                 "error":f"Invalid post. {str(e)}"
+    #             }
+    #         )
+
+    #     try:
+    #         user = NormalUser.objects.get(user_id=user_id)
+    #     except NormalUser.DoesNotExist as e:
+    #         raise serializers.ValidationError(
+    #             {
+    #                 "error":f"Invalid post. {str(e)}"
+    #             }
+    #         )
+
+    #     serializer.save(post=post, user=user)
+
+
+
+
+
+# Update a Comment
+class CommentUpdateView(generics.UpdateAPIView):
+    serializer_class = CommentSerializer
+    
+
+    def get_object(self):
+        comment_id = self.request.data.get('comment_id')
+        if not comment_id:
+            raise serializers.ValidationError({"comment_id": "This field is required."})
+
+        try:
+            comment = Comment.objects.get(id=comment_id, user=self.request.user)
+        except Comment.DoesNotExist:
+            raise serializers.ValidationError({"comment_id": "Comment not found or you do not have permission to edit it."})
+
+        return comment
+
+# Delete a Comment
+class CommentDeleteView(generics.DestroyAPIView):
+    serializer_class = CommentSerializer
+    
+
+    def get_object(self):
+        comment_id = self.request.data.get('comment_id')
+        if not comment_id:
+            raise serializers.ValidationError({"comment_id": "This field is required."})
+
+        try:
+            comment = Comment.objects.get(id=comment_id, user=self.request.user)
+        except Comment.DoesNotExist:
+            raise serializers.ValidationError({"comment_id": "Comment not found or you do not have permission to delete it."})
+
+        return comment
