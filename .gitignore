@@ -5,4 +5,3 @@ __pycache__/
 *.pyc
 db.sqlite3
 Innovation_WebApp/__pycache__/*.pyc
-
