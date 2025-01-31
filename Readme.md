@@ -531,3 +531,350 @@ curl -X POST http://127.0.0.1:8000/event-registrations/ \
     "event": "5"
 }'
 ```
+
+# Contact API Documentation
+
+## Overview
+This API provides endpoints for managing events, event registrations, newsletter subscriptions, and user communications. It enables event organization, participant registration, newsletter management, and handling user inquiries.
+
+
+## Contact & Newsletter APIs
+
+### Newsletter Management
+
+#### 1. Subscribe to Newsletter
+- **Endpoint:** `POST /subscribe/`
+- **Description:** Subscribe an email address to the newsletter
+- **Request Body:**
+```json
+{
+    "email": "kizahkevinianh001@gmail.com"
+}
+```
+- **Response Body:**
+```json
+{
+    "message": "kizahkevinianh001@gmail.com email was successfully subscribed to our newsletter!"
+}
+```
+
+#### 2. Send Newsletter
+- **Endpoint:** `POST /newsletter/`
+- **Description:** Send a broadcast email to all newsletter subscribers
+- **Request Body:**
+```json
+{
+    "subject": "Resumption of classes",
+    "message": "Classes resuming sooon"
+}
+```
+- **Response Body:**
+```json
+{
+    "message": "Email sent successfully"
+}
+```
+
+### Contact Form
+
+#### 1. Submit Contact Form
+- **Endpoint:** `POST /contact/`
+- **Description:** Submit a contact form message for questions, concerns, or feedback
+- **Request Body:**
+```json
+{
+    "message_name": "Onyango Stephen Omondi",
+    "message_email": "stephenondeyo0@gmail.com",
+    "message": "Food waste is a pressing issue, with millions of tons of edible food discarded every year. By taking small steps, we can make a big impact. Start by planning your meals in advance and buying only what you need. Look for stores or apps that sell near-expiry products at discounted prices to save money while preventing waste. Donate excess food to local charities or compost leftovers to reduce landfill waste. Together, we can create a more sustainable and waste-free world."
+}
+```
+- **Response Body:** `200 OK`
+
+## Data Models
+
+### Newsletter Subscription
+| Field | Type | Description |
+|-------|------|-------------|
+| email | Email | Subscriber's email address |
+
+### Newsletter Message
+| Field | Type | Description |
+|-------|------|-------------|
+| subject | String | Email subject line |
+| message | Text | Email content |
+
+### Contact Message
+| Field | Type | Description |
+|-------|------|-------------|
+| message_name | String | Sender's full name |
+| message_email | Email | Sender's email address |
+| message | Text | Message content |
+
+## Usage Examples
+
+### Subscribe to Newsletter
+```bash
+curl -X POST http://127.0.0.1:8000/subscribe/ \
+-H "Content-Type: application/json" \
+-d '{
+    "email": "example@domain.com"
+}'
+```
+
+### Send Newsletter
+```bash
+curl -X POST http://127.0.0.1:8000/newsletter/ \
+-H "Content-Type: application/json" \
+-d '{
+    "subject": "Important Update",
+    "message": "Here is our latest news..."
+}'
+```
+
+### Submit Contact Form
+```bash
+curl -X POST http://127.0.0.1:8000/contact/ \
+-H "Content-Type: application/json" \
+-d '{
+    "message_name": "John Doe",
+    "message_email": "john@example.com",
+    "message": "I have a question about..."
+}'
+```
+
+## Error Handling
+The API returns standard HTTP status codes:
+- 200: Success
+- 400: Bad Request (e.g., invalid email format)
+- 500: Server Error
+
+Common error scenarios:
+- Invalid email format
+- Empty required fields
+- Server unable to send emails
+
+## Notes
+- Newsletter broadcasts are sent to all subscribed email addresses
+- Contact form submissions should receive an automated acknowledgment
+- All email addresses are validated before processing
+- Message content should not be empty
+
+# Communities API Documentation
+
+## Overview
+The Communities API enables management of technical communities, their members, and meeting sessions. It provides endpoints for creating communities, managing memberships, and scheduling community sessions.
+
+## Base URL
+```
+http://127.0.0.1:8000
+```
+
+## Endpoints
+
+### 1. Communities Management
+
+#### Create Community
+- **URL:** `POST /communities/`
+- **Description:** Create a new technical community
+- **Request Body:**
+```json
+{
+    "name": "Artificial Intelligence & Machine Learning",
+    "community_lead": "Sarah Chen",
+    "description": "Our AI/ML community focuses on understanding and implementing cutting-edge machine learning algorithms..."
+}
+```
+- **Response:** Returns created community object with assigned ID
+```json
+{
+    "id": 2,
+    "name": "Artificial Intelligence & Machine Learning",
+    "community_lead": "Sarah Chen",
+    "description": "...",
+    "members": [],
+    "total_members": 0,
+    "sessions": []
+}
+```
+
+#### List Communities
+- **URL:** `GET /communities/`
+- **Description:** Retrieve all communities with their details
+- **Response:** Returns paginated list of communities
+```json
+{
+    "count": 2,
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "id": 1,
+            "name": "Cyber Security",
+            "community_lead": "Shadrack Mwabe",
+            "members": [...],
+            "sessions": [...]
+        }
+    ]
+}
+```
+
+### 2. Community Membership
+
+#### Join Community
+- **URL:** `POST /communities/{id}/join/`
+- **Description:** Request to join a specific community
+- **Parameters:** 
+  - `id`: Community ID (in URL)
+- **Request Body:**
+```json
+{
+    "name": "Kevin Ochieng",
+    "email": "kizahkevinianh001@gmail.com"
+}
+```
+- **Response:**
+```json
+{
+    "message": "Successfully joined the community!"
+}
+```
+
+#### List Community Members
+- **URL:** `POST /communities/{id}/members`
+- **Description:** Get list of members for a specific community
+- **Parameters:**
+  - `id`: Community ID (in URL)
+- **Response:**
+```json
+[
+    {
+        "id": 14,
+        "name": "Stephen Omondi",
+        "email": "ondeyostephen0@gmail.com",
+        "joined_at": "2025-01-24T18:56:28.069007Z"
+    }
+]
+```
+
+### 3. Community Sessions
+
+#### Add Session
+- **URL:** `POST /communities/{id}/sessions/`
+- **Description:** Schedule a regular meeting session for a community
+- **Parameters:**
+  - `id`: Community ID (in URL)
+- **Request Body:**
+```json
+{
+    "day": "MONDAY",
+    "start_time": "1700",
+    "end_time": "1900",
+    "meeting_type": "HYBRID",
+    "location": "ECA19"
+}
+```
+- **Response:**
+```json
+{
+    "day": "MONDAY",
+    "start_time": "17:00:00",
+    "end_time": "19:00:00",
+    "meeting_type": "HYBRID",
+    "location": "ECA19"
+}
+```
+
+## Data Models
+
+### Community
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| name | string | Yes | Name of the community |
+| community_lead | string | Yes | Name of the lead member |
+| description | text | Yes | Detailed description of community |
+| co_lead | string | No | Name of co-lead member |
+| treasurer | string | No | Name of treasurer |
+| secretary | string | No | Name of secretary |
+| email | string | No | Contact email |
+| phone_number | string | No | Contact phone number |
+| github_link | string | No | Community GitHub URL |
+| linkedin_link | string | No | Community LinkedIn URL |
+| founding_date | date | No | Community establishment date |
+| is_recruiting | boolean | No | Whether accepting new members |
+| tech_stack | string | No | Technologies used |
+
+### Member
+| Field | Type | Description |
+|-------|------|-------------|
+| id | integer | Unique identifier |
+| name | string | Member's full name |
+| email | string | Member's email address |
+| joined_at | datetime | Timestamp of joining |
+
+### Session
+| Field | Type | Description |
+|-------|------|-------------|
+| day | string | Meeting day (e.g., MONDAY) |
+| start_time | time | Session start time (24hr format) |
+| end_time | time | Session end time (24hr format) |
+| meeting_type | string | HYBRID/ONLINE/PHYSICAL |
+| location | string | Meeting venue |
+
+## Usage Notes
+
+1. **Session Scheduling**
+   - Communities typically hold sessions at least twice weekly
+   - Times should be provided in 24-hour format (e.g., "1700" for 5:00 PM)
+   - Location is required for PHYSICAL and HYBRID sessions
+
+2. **Meeting Types**
+   - HYBRID: Both in-person and online attendance options
+   - ONLINE: Virtual meeting only
+   - PHYSICAL: In-person meeting only
+
+3. **Community Membership**
+   - Members can join multiple communities
+   - Each member gets a unique ID within the community
+   - Joining timestamp is automatically recorded
+
+4. **Community Management**
+   - Communities can have optional leadership roles (co-lead, treasurer, secretary)
+   - Tech stack and other optional fields can be updated later
+   - Session details can be updated by community admins
+
+## Example Requests
+
+### Create a Community
+```bash
+curl -X POST http://127.0.0.1:8000/communities/ \
+-H "Content-Type: application/json" \
+-d '{
+    "name": "Web Development",
+    "community_lead": "John Doe",
+    "description": "A community focused on modern web technologies..."
+}'
+```
+
+### Join a Community
+```bash
+curl -X POST http://127.0.0.1:8000/communities/1/join/ \
+-H "Content-Type: application/json" \
+-d '{
+    "name": "Kevin Ochieng",
+    "email": "kevin@example.com"
+}'
+```
+
+### Add a Session
+```bash
+curl -X POST http://127.0.0.1:8000/communities/1/sessions/ \
+-H "Content-Type: application/json" \
+-d '{
+    "day": "MONDAY",
+    "start_time": "1700",
+    "end_time": "1900",
+    "meeting_type": "HYBRID",
+    "location": "Room 101"
+}'
+```
+
