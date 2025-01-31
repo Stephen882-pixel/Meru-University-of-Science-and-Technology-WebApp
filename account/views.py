@@ -3,11 +3,23 @@ import logging
 from django.contrib.auth import authenticate
 from rest_framework.views import APIView
 from rest_framework.response import Response
+
+from account.models import PasswordResetRequest
 from .serializers import RegisterSerializer, LoginSerializer,ChangePasswordSerializer,status
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from account import serializers
+
+
+import secrets
+from django.core.mail import send_mail
+from django.urls import reverse
+from django.utils import timezone
+from django.conf import settings
+from django.contrib.auth.models import User
+
+
 # Create your views here.
 class RegisterView(APIView):
     def post(self, request):
@@ -92,6 +104,72 @@ class ChangePasswordView(APIView):
                 'message': 'An unexpected error occurred',
                 'detail': str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+
+class PasswordResetView(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        try:
+            user = User.objects.get(email=email)
+            
+            # Generate unique reset token
+            token = secrets.token_urlsafe(32)
+            
+            # Create password reset request
+            reset_request = PasswordResetRequest.objects.create(
+                user=user, 
+                token=token
+            )
+            
+            # Construct reset link
+            reset_url = f"{settings.FRONTEND_URL}/reset-password/{token}"
+            
+            # Send reset email
+            send_mail(
+                'Password Reset Request',
+                f'Click the link to reset your password: {reset_url}',
+                settings.DEFAULT_FROM_EMAIL,
+                [email],
+                fail_silently=False,
+            )
+            
+            return Response({
+                'message': 'Password reset link sent to your email'
+            }, status=status.HTTP_200_OK)
+        
+        except User.DoesNotExist:
+            return Response({
+                'error': 'No user found with this email'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+class PasswordResetConfirmView(APIView):
+    def post(self, request):
+        token = request.data.get('token')
+        new_password = request.data.get('new_password')
+        
+        try:
+            reset_request = PasswordResetRequest.objects.get(
+                token=token, 
+                is_used=False,
+                created_at__gt=timezone.now() - timezone.timedelta(hours=1)
+            )
+            
+            user = reset_request.user
+            user.set_password(new_password)
+            user.save()
+            
+            # Mark token as used
+            reset_request.is_used = True
+            reset_request.save()
+            
+            return Response({
+                'message': 'Password reset successful'
+            }, status=status.HTTP_200_OK)
+        
+        except PasswordResetRequest.DoesNotExist:
+            return Response({
+                'error': 'Invalid or expired reset token'
+            }, status=status.HTTP_400_BAD_REQUEST)
     
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
