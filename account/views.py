@@ -18,7 +18,7 @@ class RegisterView(APIView):
             
             serializer.save()
             return Response({
-                'data': {},
+                'data': dict(serializer.data),
                 'message': 'Your account has been created'
             }, status=status.HTTP_201_CREATED)
         except Exception as e:
