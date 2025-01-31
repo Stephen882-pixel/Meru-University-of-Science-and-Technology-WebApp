@@ -8,22 +8,55 @@ The Meru University Science Innovators Club API provides a set of endpoints for 
 ## Authentication
 To access certain protected endpoints, such as sending the newsletter, authentication is required. The API uses a JWT-based authentication system with access and refresh tokens.
 
-### Obtaining Access and Refresh Tokens
-To obtain an access and refresh token, make a POST request to the `/api/token/` endpoint with the following payload:
+### Register endpoint
+To regiser a user, make a POST request to the `/users/register/` endpoint with the following payload:
 
 ```json
 {
+    "firstname":"your_firstname",
+    "lastname":"your_lastname",
     "username": "your_username",
+    "email":"your_email",
     "password": "your_password"
 }
 ```
 
-The response will contain the access and refresh tokens:
+The response for register :
 
 ```json
 {
-    "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    "data": {
+        "firstname": "",
+        "lastname": "",
+        "email": "",
+        "username": "",
+        "password": ""
+    },
+    "message": "Your account has been created"
+}
+```
+
+### Login endpoint
+To regiser a user, make a POST request to the `/users/login/` endpoint with the following payload:
+
+```json
+{
+    "email":"your_email",
+    "password": "your_password"
+}
+```
+
+The response for login :
+
+```json
+{
+    "message": "Login successful",
+    "data": {
+        "token": {
+            "refresh": "",
+            "access": ""
+        }
+    }
 }
 ```
 
@@ -65,6 +98,32 @@ If the access token expires, you can use the refresh token to obtain a new acces
 
 #### List All Events
 **Endpoint**: `GET /events/`
+No request body is required.
+**Response**
+```json
+
+{
+    "count": 1,
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "id": 1,
+            "name": "Android",
+            "title": "Bootcamp",
+            "description": "An online bootcamp",
+            "image": "s3bucket image url or default",
+            "date": "2024-12-15T09:00:00Z",
+            "location": "Virtual",
+            "organizer": "Ephy",
+            "contact_email": "ephy@gmail.com",
+            "is_virtual": true,
+            "registration_link": "http://127.0.0.1:8000/events/"
+        }
+    ]
+}
+
+```
 
 #### Update an Event
 **Endpoint**: `PUT /events/{id}/`
@@ -74,7 +133,7 @@ If the access token expires, you can use the refresh token to obtain a new acces
     "name": "AI Ethics Workshop",
     "title": "Navigating the Ethical Landscape of AI",
     "description": "Explore the key ethical considerations in the development and deployment of artificial intelligence systems.",
-    "image": "base64_image_string_goes_here",
+    "image": "s3buket string or default name",
     "date": "2023-09-01T09:00:00Z",
     "location": "Hybrid (in-person and virtual)",
     "organizer": "Jane Smith",
@@ -86,6 +145,16 @@ If the access token expires, you can use the refresh token to obtain a new acces
 
 #### Partially Update an Event
 **Endpoint**: `PATCH /events/{id}/`
+**Request Body**:
+```json
+{
+    "organizer": "Collins Munene",
+    "contact_email": "collinsmunene9@gmail.com"
+}
+```
+
+#### Get Specific event
+**Endpoint**: `GET /events/{id}/`
 **Request Body**:
 ```json
 {
@@ -140,67 +209,82 @@ This API allows users to register, log in, create, view, update, and delete blog
 ---
 
 ## Base URL
-`http://127.0.0.1:8000/api/`
+`http://127.0.0.1:8000/`
 
 ---
 
 ## Endpoints
 
-### 1. **User Registration**
-**Endpoint**: `account/register/`  
+### 1. **Create a comment**
+**Endpoint**: `comments/create`  
 **Method**: POST  
-**Description**: Allows a user to create an account.  
+**Description**: Allows a user to comment on an event.The post and user parameter represent the user_id and post_id consecutively.  
+**Description**: The user_id should be sent as type uuid and the post_id type integer. 
 
 **Request Body**:  
 ```json
 {
-  "firstname": "string",
-  "lastname": "string",
-  "email": "string",
-  "username": "string",
-  "password": "string"
+    "post": ,
+    "user": ,
+    "text": ""
 }
 ```
 
 **Response Example**:  
 ```json
 {
-  "message": "Account created successfully",
-  "user": {
-    "id": 1,
-    "firstname": "John",
-    "lastname": "Doe",
-    "email": "john.doe@example.com",
-    "username": "johndoe"
-  }
+    "id": 2,
+    "text": "hi",
+    "created_at": "2025-01-31T10:01:13.244161Z",
+    "updated_at": "2025-01-31T10:01:13.244234Z"
 }
 ```
 
 ---
 
-### 2. **User Login**
-**Endpoint**: `account/login/`  
+### 2. **Comment update**
+**Endpoint**: `comments/update/`  
 **Method**: POST  
-**Description**: Authenticates a user and returns access and refresh tokens.  
+**Description**: Allows to update a comment. The post and user represent the poast_id and user_id.
+**Description**: The id should be sent as type integer and represents the comment_id and user_id as type uuid.
 
-**Request Body**:  
+**Request Body**: 
 ```json
 {
-  "email": "string",
-  "password": "string"
+    "id": ,
+    "user": ,
+    "text": ""
 }
 ```
 
 **Response Example**:  
 ```json
+
 {
-  "message": "Login successful",
-  "data": {
-    "token": {
-      "refresh": "refresh_token_here",
-      "access": "access_token_here"
-    }
-  }
+    "text": "",
+    "created_at": "2025-01-31T10:01:13.244161Z",
+    "updated_at": "2025-01-31T12:12:23.687324Z"
+}
+```
+
+### 2. **Comment delete**
+**Endpoint**: `comments/delete/`  
+**Method**: POST  
+**Description**: Allows to delete  a comment. T
+**Description**: The id should be sent as type integer and represents the comment_id.
+
+**Request Body**: 
+```json
+{
+    "id": ,
+}
+```
+
+**Response Example**:  
+```json
+
+{
+    "message":"Comment successfully deleted."
 }
 ```
 

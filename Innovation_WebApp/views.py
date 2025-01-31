@@ -1,6 +1,6 @@
 from rest_framework import viewsets, views, status,generics,serializers
 from rest_framework.response import Response
-from .serializers import SubscribedUsersSerializer, EventsSerializer,CommentSerializer
+from .serializers import SubscribedUsersSerializer, EventsSerializer,CommentSerializer,CommentUpdateSerializer
 from account.models import NormalUser
 from .models import SubscribedUsers, Events,Comment
 from django.core.mail import send_mail, EmailMessage
@@ -171,20 +171,38 @@ class CommentCreateView(generics.CreateAPIView):
 
 # Update a Comment
 class CommentUpdateView(generics.UpdateAPIView):
-    serializer_class = CommentSerializer
-    
+    serializer_class = CommentUpdateSerializer
 
     def get_object(self):
-        comment_id = self.request.data.get('comment_id')
+        comment_id = self.request.data.get('id')
+        user_id = self.request.data.get('user')
+        
         if not comment_id:
-            raise serializers.ValidationError({"comment_id": "This field is required."})
+            raise serializers.ValidationError({"id": "This field is required."})
+        if not user_id:
+            raise serializers.ValidationError({"user": "This field is required."})
 
         try:
-            comment = Comment.objects.get(id=comment_id, user=self.request.user)
+            comment = Comment.objects.get(id=comment_id)
         except Comment.DoesNotExist:
-            raise serializers.ValidationError({"comment_id": "Comment not found or you do not have permission to edit it."})
+            raise serializers.ValidationError({"error": "Comment not found."})
 
-        return comment
+        try:
+            user_uuid = UUID(user_id) if isinstance(user_id, str) else user_id
+            user = NormalUser.objects.get(user_id=user_uuid)
+            
+            if comment.user.user_id != user.user_id:
+                raise serializers.ValidationError({"authorization": "You are not authorized to edit this comment."})
+            return comment
+        except (NormalUser.DoesNotExist, ValueError):
+            raise serializers.ValidationError({"user": "User not found."})
+        except Exception as e:
+            raise serializers.ValidationError({"error": str(e)})
+
+    def perform_update(self, serializer):
+        # The user field will now be a NormalUser instance thanks to validate_user
+        serializer.save()
+        
 
 # Delete a Comment
 class CommentDeleteView(generics.DestroyAPIView):
@@ -192,13 +210,27 @@ class CommentDeleteView(generics.DestroyAPIView):
     
 
     def get_object(self):
-        comment_id = self.request.data.get('comment_id')
+        comment_id = self.request.data.get('id')
         if not comment_id:
-            raise serializers.ValidationError({"comment_id": "This field is required."})
+            raise serializers.ValidationError({"id": "This field is required."})
 
         try:
             comment = Comment.objects.get(id=comment_id, user=self.request.user)
         except Comment.DoesNotExist:
-            raise serializers.ValidationError({"comment_id": "Comment not found or you do not have permission to delete it."})
+            raise serializers.ValidationError({"id": "Comment not found or you do not have permission to delete it."})
 
         return comment
+    # Get all Comments
+class CommentListView(generics.ListAPIView):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+
+    def list(self, request, *args, **kwargs):
+        response = super().list(request, *args, **kwargs)
+        for comment in response.data['results']:
+            comment_instance = Comment.objects.get(text=comment['text'])
+            comment['id'] = comment_instance.id
+            comment['user'] = comment_instance.user.user_id
+            comment['post'] = comment_instance.post.id
+        return response
+
