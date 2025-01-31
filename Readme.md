@@ -248,3 +248,286 @@ The Meru University Science Innovators Club API is a comprehensive digital platf
 ### 📌 Notes
 - Ensure the `uid` matches the blog you want to modify or remove
 - `main_image` field contains the URL path to the uploaded image
+
+
+# Events Management API Documentation
+
+## Overview
+This API allows you to manage events and handle event registrations. It provides endpoints for creating, reading, updating, and deleting events, as well as managing event registrations and exporting registration data.
+
+## Base URL
+```
+http://127.0.0.1:8000
+```
+
+## API Endpoints
+
+### Events
+
+#### 1. Create an Event
+- **Endpoint:** `POST /events/`
+- **Description:** Create a new event
+- **Request Body:**
+```json
+{
+    "name": "AI & Machine Learning Summit",
+    "title": "The Future of AI: From Theory to Implementation",
+    "description": "An intensive summit focused on practical applications of AI and ML, featuring workshops on TensorFlow, PyTorch, and real-world case studies from industry leaders.",
+    "image": "base64_image_string_goes_here",
+    "date": "2024-11-15T09:00:00Z",
+    "location": "Innovation Center, San Francisco",
+    "organizer": "TechMinds Institute",
+    "contact_email": "ai.summit@example.com",
+    "is_virtual": false,
+    "registration_link": "https://example.com/ai-summit-2024"
+}
+```
+- **Response Body:**
+```json
+{
+    "id": 5,
+    "name": "AI & Machine Learning Summit",
+    "title": "The Future of AI: From Theory to Implementation",
+    "description": "An intensive summit focused on practical applications of AI and ML, featuring workshops on TensorFlow, PyTorch, and real-world case studies from industry leaders.",
+    "image": "event_images/default.png",
+    "date": "2024-11-15T09:00:00Z",
+    "location": "Innovation Center, San Francisco",
+    "organizer": "TechMinds Institute",
+    "contact_email": "ai.summit@example.com",
+    "is_virtual": false,
+    "registration_link": "https://example.com/ai-summit-2024"
+}
+```
+
+#### 2. List Events
+- **Endpoint:** `GET /events/`
+- **Description:** Retrieve a list of all events
+- **Response Body:**
+```json
+{
+    "count": 4,
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "id": 1,
+            "name": "Web Development Bootcamp",
+            "title": "Master Frontend and Backend Basics",
+            "description": "A thought-provoking session discussing the ethical challenges and societal impacts of AI technologies, featuring leading experts in the field.",
+            "image": "event_images/default.png",
+            "date": "2024-12-15T17:00:00Z",
+            "location": "Virtual Event",
+            "organizer": "AI for Good Initiative",
+            "contact_email": "aiethics@example.com",
+            "is_virtual": true,
+            "registration_link": "https://example.com/ai-ethics-registration"
+        },
+        // ... more events
+    ]
+}
+```
+
+#### 3. Update an Event
+- **Endpoint:** `PUT /events/{id}/`
+- **Description:** Update all fields of an existing event
+- **Request Body:**
+```json
+{
+    "name": "AI Ethics and Society",
+    "title": "Exploring Ethical Implications of Artificial Intelligence",
+    "description": "A thought-provoking session discussing the ethical challenges and societal impacts of AI technologies, featuring leading experts in the field.",
+    "image": "base64_image_string_goes_here",
+    "date": "2024-12-15T17:00:00Z",
+    "location": "Virtual Event",
+    "organizer": "AI for Good Initiative",
+    "contact_email": "aiethics@example.com",
+    "is_virtual": true,
+    "registration_link": "https://example.com/ai-ethics-registration"
+}
+```
+- **Response Body:**
+```json
+{
+    "id": 5,
+    "name": "AI Ethics and Society",
+    "title": "Exploring Ethical Implications of Artificial Intelligence",
+    "description": "A thought-provoking session discussing the ethical challenges and societal impacts of AI technologies, featuring leading experts in the field.",
+    "image": "event_images/default.png",
+    "date": "2024-12-15T17:00:00Z",
+    "location": "Virtual Event",
+    "organizer": "AI for Good Initiative",
+    "contact_email": "aiethics@example.com",
+    "is_virtual": true,
+    "registration_link": "https://example.com/ai-ethics-registration"
+}
+```
+
+#### 4. Partial Update an Event
+- **Endpoint:** `PATCH /events/{id}/`
+- **Description:** Update specific fields of an existing event
+- **Request Body:**
+```json
+{
+    "name": "Web Development Bootcamp(updated!!!)",
+    "title": "Master Frontend and Backend Basics(updated)"
+}
+```
+- **Response Body:**
+```json
+{
+    "id": 5,
+    "name": "Web Development Bootcamp(updated!!!)",
+    "title": "Master Frontend and Backend Basics(updated)",
+    "description": "A thought-provoking session discussing the ethical challenges and societal impacts of AI technologies, featuring leading experts in the field.",
+    "image": "event_images/default.png",
+    "date": "2024-12-15T17:00:00Z",
+    "location": "Virtual Event",
+    "organizer": "AI for Good Initiative",
+    "contact_email": "aiethics@example.com",
+    "is_virtual": true,
+    "registration_link": "https://example.com/ai-ethics-registration"
+}
+```
+
+#### 5. Delete an Event
+- **Endpoint:** `DELETE /events/{id}/`
+- **Description:** Remove an event
+- **Response:** 204 No Content
+
+### Event Registrations
+
+#### 1. Register for an Event
+- **Endpoint:** `POST /event-registrations/`
+- **Description:** Register a participant for an event
+- **Request Body:**
+```json
+{
+    "full_name": "Stephen Onyango",
+    "email": "ondeyostephen0@gmail.com",
+    "age_bracket": "22-24",
+    "course": "BCS",
+    "educational_level": "year_4",
+    "event": "5"
+}
+```
+- **Response Body:**
+```json
+{
+    "uid": "c97249b3-a73d-4a82-8c20-ce6ca0fc1db6",
+    "full_name": "Stephen Onyango",
+    "email": "stephenonyango@students.ac.ke",
+    "age_bracket": "22-24",
+    "course": "BCS",
+    "educational_level": "year_4",
+    "phone_number": null,
+    "registration_timestamp": "2025-01-31T12:26:25.011601Z",
+    "ticket_number": "bcee1e25-2b95-49d3-a19a-79842ffa39f0",
+    "event": 5
+}
+```
+
+#### 2. List Registrations
+- **Endpoint:** `GET /event-registrations/`
+- **Description:** Retrieve all event registrations
+- **Response Body:**
+```json
+{
+    "count": 5,
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "uid": "e7eca62f-974c-4ba1-a825-88973b886642",
+            "full_name": "Stephen Omondi",
+            "email": "ondeyostephen0@gmail.com",
+            "age_bracket": "22-24",
+            "course": "BCS",
+            "educational_level": "year_4",
+            "phone_number": null,
+            "registration_timestamp": "2025-01-24T19:10:51.507585Z",
+            "ticket_number": "4107c4ad-8937-4e67-a777-4b1c18a6c024",
+            "event": 1
+        },
+        // ... more registrations
+    ]
+}
+```
+
+#### 3. Export Registrations
+- **Endpoint:** `GET /event-registrations/export_registrations/`
+- **Query Parameters:** `event_id={id}`
+- **Description:** Export registration data for a specific event to a spreadsheet
+- **Response:** Returns a downloadable spreadsheet file
+
+## Data Models
+
+### Event
+| Field | Type | Description |
+|-------|------|-------------|
+| id | Integer | Auto-generated primary key |
+| name | String | Name of the event |
+| title | String | Title/subtitle of the event |
+| description | Text | Detailed description |
+| image | File/String | Event image |
+| date | DateTime | Event date and time (ISO format) |
+| location | String | Physical or virtual location |
+| organizer | String | Event organizer name |
+| contact_email | Email | Contact email for inquiries |
+| is_virtual | Boolean | Whether the event is virtual |
+| registration_link | URL | External registration link |
+
+### Event Registration
+| Field | Type | Description |
+|-------|------|-------------|
+| uid | UUID | Unique identifier for registration |
+| full_name | String | Participant's full name |
+| email | Email | Participant's email |
+| age_bracket | String | Age range of participant |
+| course | String | Course/program of study |
+| educational_level | String | Current education level |
+| phone_number | String | Optional contact number |
+| registration_timestamp | DateTime | When registration occurred |
+| ticket_number | UUID | Unique ticket identifier |
+| event | Integer | Reference to event ID |
+
+## Error Handling
+The API returns standard HTTP status codes:
+- 200: Success
+- 201: Created
+- 204: No Content
+- 400: Bad Request
+- 404: Not Found
+- 500: Server Error
+
+## Usage Examples
+
+### Creating an Event
+```bash
+curl -X POST http://127.0.0.1:8000/events/ \
+-H "Content-Type: application/json" \
+-d '{
+    "name": "AI & Machine Learning Summit",
+    "title": "The Future of AI: From Theory to Implementation",
+    "description": "An intensive summit focused on practical applications of AI and ML",
+    "date": "2024-11-15T09:00:00Z",
+    "location": "Innovation Center, San Francisco",
+    "organizer": "TechMinds Institute",
+    "contact_email": "ai.summit@example.com",
+    "is_virtual": false,
+    "registration_link": "https://example.com/ai-summit-2024"
+}'
+```
+
+### Registering for an Event
+```bash
+curl -X POST http://127.0.0.1:8000/event-registrations/ \
+-H "Content-Type: application/json" \
+-d '{
+    "full_name": "Stephen Onyango",
+    "email": "ondeyostephen0@gmail.com",
+    "age_bracket": "22-24",
+    "course": "BCS",
+    "educational_level": "year_4",
+    "event": "5"
+}'
+```
