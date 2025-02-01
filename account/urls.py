@@ -1,6 +1,6 @@
 from django.urls import path
 from django.contrib import admin
-from account.views import ChangePasswordView, LogoutView, PasswordResetConfirmView, PasswordResetView, RegisterView,LoginView
+from account.views import ChangePasswordView, LogoutView, PasswordResetConfirmView, PasswordResetView, RegisterView,LoginView, UserDataView
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
     TokenVerifyView
@@ -21,5 +21,8 @@ urlpatterns = [
     # JWT Token Routes
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('token/verify/', TokenVerifyView.as_view(), name='token_verify'),
+
+    # get user data with access tokens
+    path('get-user-data/',UserDataView.as_view(),name='get_user_data')
    
 ]

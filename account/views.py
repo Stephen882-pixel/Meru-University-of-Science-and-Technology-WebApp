@@ -194,5 +194,34 @@ class LogoutView(APIView):
             return Response({
                 'message': 'Invalid token'
             }, status=status.HTTP_400_BAD_REQUEST)
+        
+
+class UserDataView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self,request):
+        # Get the authenticated user
+        user = request.user
+        try:
+            # fetch user profile details
+            user_profile = UserProfile.objects.get(user=user)
+
+            # Return user data
+            user_data = {
+                'username':user.username,
+                'email':user.email,
+                'first_name':user.first_name,
+                'last_name':user.last_name,
+                'registration_no':user_profile.registration_no,
+                'course':user_profile.course
+            }
+            return Response({
+                'message':'User data retrieved successfully',
+                'user_data':user_data
+            },status=status.HTTP_200_OK)
+        except UserProfile.DoesNotExist:
+            return Response({
+                'error':'User profile does not exist'
+            },status=status.HTTP_404_NOT_FOUND)
 
 # google oauth 
