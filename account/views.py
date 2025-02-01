@@ -18,6 +18,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.conf import settings
 from django.contrib.auth.models import User
+from.models import UserProfile
 
 
 # Create your views here.
@@ -27,9 +28,18 @@ class RegisterView(APIView):
         
         if serializer.is_valid():
             user = serializer.save()
+            user_profile = UserProfile.objects.get(user=user)
+            user_data = {
+                'username':str(user.username),
+                'email':str(user.email),
+                'first_name':str(user.first_name),
+                'last_name':str(user.last_name),
+                'registration_no':str(user_profile.registration_no),
+                'course':str(user_profile.course)
+            }
             return Response({
                 'message': 'Account created successfully',
-                'user_id': user.id
+                'user_data':user_data
             }, status=status.HTTP_201_CREATED)
         
         return Response({
@@ -56,10 +66,6 @@ class LoginView(APIView):
             return Response({
                 'status': 'success',
                 'tokens': tokens,
-                'user': {
-                    'id': user.id,
-                    'email': user.email
-                }
             }, status=status.HTTP_200_OK)
 
         except Exception as e:
