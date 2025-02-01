@@ -69,13 +69,14 @@ class RegisterSerializer(serializers.Serializer):
         registration_no = validated_data.pop('registration_no')
         course = validated_data.pop('course')
 
-        # Create User
+        # Create User with 'is_active=False'
         user = User.objects.create_user(
             username=validated_data['username'].lower(),
             email=validated_data['email'],
             first_name=validated_data['firstname'],
             last_name=validated_data['lastname'],
             password=validated_data['password'],
+            is_active=False, #User will remain inactive unttil the email is verified 
         )
         UserProfile.objects.create(
             user=user,
