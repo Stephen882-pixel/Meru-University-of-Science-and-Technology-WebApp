@@ -35,12 +35,12 @@ The Meru University Science Innovators Club API is a comprehensive digital platf
 **Request Body:**
 ```json
 {
-    "firstname":"Newton",
-    "lastname":"Wamiti",
-    "email":"newtonwamiti@gmail.com",
-    "username":"Newton882",
+    "firstname":"Stephen",
+    "lastname":"Ondeyo",
+    "email":"stephenonyango@students.must.ac.ke",
+    "username":"Stephen885",
     "password":"Kundan@123456",
-    "registration_no":"CT201/106106/22",
+    "registration_no":"CT201/106107/22",
     "course":"BCS"
 }
 ```
@@ -48,13 +48,13 @@ The Meru University Science Innovators Club API is a comprehensive digital platf
 **Response:**
 ```json
 {
-    "message": "Account created successfully",
+    "message": "Account created successfully. Please check your email for verification instructions.",
     "user_data": {
-        "username": "newton882",
-        "email": "newtonwamiti@gmail.com",
-        "first_name": "Newton",
-        "last_name": "Wamiti",
-        "registration_no": "CT201/106106/22",
+        "username": "stephen885",
+        "email": "stephenonyango@students.must.ac.ke",
+        "first_name": "Stephen",
+        "last_name": "Ondeyo",
+        "registration_no": "CT201/106107/22",
         "course": "BCS"
     }
 }
