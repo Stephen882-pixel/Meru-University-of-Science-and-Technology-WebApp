@@ -25,7 +25,7 @@ The Meru University Science Innovators Club API is a comprehensive digital platf
 - **Authentication:** Django Rest Framework
 - **Token Management:** JSON Web Tokens (JWT)
 - **Database:** PostgreSQL/SQLite
-- **API Documentation:** Swagger/OpenAPI
+
 
 ## 📡 Authentication Endpoints
 
@@ -35,13 +35,13 @@ The Meru University Science Innovators Club API is a comprehensive digital platf
 **Request Body:**
 ```json
 {
-    "firstname": "Steven",
-    "lastname": "Omondi",
-    "email": "stephenondeyo0@gmail.com",
-    "username": "Stephen883",
-    "password": "Kundan@123456",
-    "registration_no": "CT201/106104/22",
-    "course": "BCS"
+    "firstname":"Newton",
+    "lastname":"Wamiti",
+    "email":"newtonwamiti@gmail.com",
+    "username":"Newton882",
+    "password":"Kundan@123456",
+    "registration_no":"CT201/106106/22",
+    "course":"BCS"
 }
 ```
 
@@ -49,7 +49,14 @@ The Meru University Science Innovators Club API is a comprehensive digital platf
 ```json
 {
     "message": "Account created successfully",
-    "user_id": 5
+    "user_data": {
+        "username": "newton882",
+        "email": "newtonwamiti@gmail.com",
+        "first_name": "Newton",
+        "last_name": "Wamiti",
+        "registration_no": "CT201/106106/22",
+        "course": "BCS"
+    }
 }
 ```
 
@@ -59,9 +66,10 @@ The Meru University Science Innovators Club API is a comprehensive digital platf
 **Request Body:**
 ```json
 {
-    "email": "stephenondeyo0@gmail.com",
-    "password": "Kundan@123456"
+    "email":"newtonwamiti@gmail.com",
+    "password":"Kundan@123456"
 }
+
 ```
 
 **Response:**
@@ -69,12 +77,8 @@ The Meru University Science Innovators Club API is a comprehensive digital platf
 {
     "status": "success",
     "tokens": {
-        "refresh": "...",
-        "access": "..."
-    },
-    "user": {
-        "id": 5,
-        "email": "stephenondeyo0@gmail.com"
+        "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTczODQ4MDQ3NCwiaWF0IjoxNzM4Mzk0MDc0LCJqdGkiOiI4YTU0MjY0NDZhMTA0YWNhOWUzNTY1MzQyMzk5OTAxMCIsInVzZXJfaWQiOjIyfQ.ei4R03K8u1crRgFFZtTpHW3jf3dTHpzfquSdPinWctk",
+        "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzM4Mzk3Njc0LCJpYXQiOjE3MzgzOTQwNzQsImp0aSI6ImQ3ZjBjN2VmYmViODRkOTFiNGUyZTQxNjNjOGMyZWZmIiwidXNlcl9pZCI6MjJ9.VhFFPBGCi1zYA_iEiH53U1ZVuYSRYMaKmX9_y95DOFM"
     }
 }
 ```
@@ -125,6 +129,26 @@ The Meru University Science Innovators Club API is a comprehensive digital platf
 ```json
 {
     "access": "new_access_token"
+}
+```
+### 5. Get User Data
+**Endpoint:** `POST /api/account/get-user-data/`
+
+**Make sure you pass the access token in the authorization headers**
+
+**Response Body:**
+
+```
+{
+    "message": "User data retrieved successfully",
+    "user_data": {
+        "username": "newton882",
+        "email": "newtonwamiti@gmail.com",
+        "first_name": "Newton",
+        "last_name": "Wamiti",
+        "registration_no": "CT201/106106/22",
+        "course": "BCS"
+    }
 }
 ```
 
