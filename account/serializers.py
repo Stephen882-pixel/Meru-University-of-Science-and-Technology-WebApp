@@ -9,6 +9,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 from rest_framework.serializers import ValidationError
 import logging
+from.models import UserProfile
 
 
 
@@ -40,6 +41,17 @@ class RegisterSerializer(serializers.Serializer):
         if not re.search(r'[0-9]', value):
             raise serializers.ValidationError("Password must contain at least one number")
         return value
+    
+    def validate_registration_no(self,value):
+        if value.isspace():
+            raise serializers.ValidationError("Please provide registration number")
+        return value.upper()
+    
+    def validate_course(self,value):
+        if value.isspace():
+            raise serializers.ValidationError("Please provide your course")
+        
+        return value
 
     def validate(self, data):
         # Check for existing username and email
@@ -48,15 +60,28 @@ class RegisterSerializer(serializers.Serializer):
         if User.objects.filter(email=data['email']).exists():
             raise serializers.ValidationError({"email": "Email already exists"})
         return data
+    
+        
+    
 
     def create(self, validated_data):
-        # Create user with secure method
+        # Extract user profile
+        registration_no = validated_data.pop('registration_no')
+        course = validated_data.pop('course')
+
+        # Create User with 'is_active=False'
         user = User.objects.create_user(
             username=validated_data['username'].lower(),
             email=validated_data['email'],
             first_name=validated_data['firstname'],
             last_name=validated_data['lastname'],
-            password=validated_data['password']
+            password=validated_data['password'],
+            is_active=False, #User will remain inactive unttil the email is verified 
+        )
+        UserProfile.objects.create(
+            user=user,
+            registration_no=registration_no,
+            course=course
         )
         return user
 
