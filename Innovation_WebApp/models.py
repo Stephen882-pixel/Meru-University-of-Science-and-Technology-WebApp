@@ -62,12 +62,6 @@ class EventRegistration(models.Model):
     def __str__(self):
         return f"{self.full_name} - {self.event.name}"
     
-# class CommunityCategory(models.Model):
-#     name = models.CharField(max_length=100, unique=True)
-#     description = models.TextField(blank=True, null=True)
-
-#     def __str__(self):
-#         return self.name
     
 class CommunityProfile(models.Model):
     MEETING_TYPES = [

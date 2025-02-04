@@ -17,43 +17,11 @@ from rest_framework.views import APIView
 
 
 
-# class EventsViewSet(viewsets.ModelViewSet):
-#     queryset = Events.objects.all()
-#     serializer_class = EventsSerializer
-
-#     def create(self, request, *args, **kwargs):
-#         image_file = request.FILES.get('image')
-#         if image_file:
-#             # Convert the image to base64 string
-#             image_data = image_file.read()
-#             base64_image = base64.b64encode(image_data).decode("utf-8")
-#             request.data['image'] = base64_image
-#         return super().create(request, *args, **kwargs)
-
-
 #this is the event with s3 functionality    
 class EventViewSet(viewsets.ModelViewSet):
     queryset = Events.objects.all()
     serializer_class = EventsSerializer
 
-# class NewsletterSendView(views.APIView):
-#     #permission_classes = [IsAdminUser]
-#
-#     def post(self, request):
-#         subject = request.data.get('subject')
-#         receivers = request.data.get('receivers')
-#         message = request.data.get('message')
-#
-#         receivers_list = [receiver.strip() for receiver in receivers.split(',')]
-#
-#         user_email = request.user.email if request.user.is_authenticated and request.user.email else 'default@example.com'
-#         mail = EmailMessage(subject, message, f"Meru University Science Innovators Club <{user_email}>", bcc=receivers_list)
-#         mail.content_subtype = 'html'
-#
-#         if mail.send():
-#             return Response({'message': 'Email sent successfully'}, status=status.HTTP_200_OK)
-#         else:
-#             return Response({'message': 'There was an error sending the email'}, status=status.HTTP_400_BAD_REQUEST)
 
 class NewsletterSendView(views.APIView):
     def post(self, request):
@@ -209,16 +177,6 @@ class TestimonialViewSet(viewsets.ModelViewSet):
 
 
 
-# class CommunityCategoryViewSet(viewsets.ModelViewSet):
-#     queryset = CommunityCategory.objects.all()
-#     serializer_class = CommunityCategorySerializer
-    
-    # def get_permissions(self):
-    #     if self.action in ['create', 'update', 'partial_update', 'destroy']:
-    #         permission_classes = [IsAdminUser]
-    #     else:
-    #         permission_classes = [permissions.AllowAny]
-    #     return [permission() for permission in permission_classes]
 
 
 class SessionCreateView(APIView):

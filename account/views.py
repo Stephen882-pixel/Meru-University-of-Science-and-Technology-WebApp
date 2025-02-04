@@ -35,6 +35,8 @@ from django.conf import settings
 import jwt
 from rest_framework import status
 from django.http import HttpResponse
+from rest_framework_simplejwt.views import TokenRefreshView
+import traceback
 class RegisterView(APIView):
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
@@ -56,16 +58,19 @@ class RegisterView(APIView):
                 'email': str(user.email),
                 'first_name': str(user.first_name),
                 'last_name': str(user.last_name),
-                'registration_no': str(user_profile.registration_no),
+                #'registration_no': str(user_profile.registration_no),
                 'course': str(user_profile.course)
             }
             return Response({
                 'message': 'Account created successfully. Please check your email for verification instructions.',
-                'user_data': user_data
+                'status':'success',
+                'user_data': None
             }, status=status.HTTP_201_CREATED)
 
         return Response({
-            'errors': serializer.errors
+            'message':'There was a problem signing up.Please try again',
+            'status': serializer.errors,
+            'data':None
         }, status=status.HTTP_400_BAD_REQUEST)
 
     def send_verification_email(self, user):
@@ -123,14 +128,16 @@ class LoginView(APIView):
             tokens = self.get_tokens_for_user(user)
             
             return Response({
+                'message':'Login successfull',
                 'status': 'success',
                 'tokens': tokens,
             }, status=status.HTTP_200_OK)
 
         except Exception as e:
             return Response({
-                'status': 'error',
-                'message': f'Login processing failed: {str(e)}'
+                'message': f'Login processing failed',
+                'status': serializer.errors,
+                'data':None
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def get_tokens_for_user(self, user):
@@ -154,11 +161,13 @@ class ChangePasswordView(APIView):
             if serializer.is_valid():
                 serializer.save()
                 return Response({
+                    'message': 'Password changed successfully',
                     'status': 'success',
-                    'message': 'Password changed successfully'
+                    'data':None
                 }, status=status.HTTP_200_OK)
 
             return Response({
+                'message':'An error occured.Please try again',
                 'status': 'error',
                 'errors': serializer.errors
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -271,12 +280,13 @@ class UserDataView(APIView):
                 'email':user.email,
                 'first_name':user.first_name,
                 'last_name':user.last_name,
-                'registration_no':user_profile.registration_no,
+                #'registration_no':user_profile.registration_no,
                 'course':user_profile.course
             }
             return Response({
                 'message':'User data retrieved successfully',
-                'user_data':user_data
+                'status':'success',
+                'data':user_data
             },status=status.HTTP_200_OK)
         except UserProfile.DoesNotExist:
             return Response({
@@ -340,6 +350,30 @@ class EmailVerificationView(APIView):
             return HttpResponse("Verification token has expired", status=status.HTTP_400_BAD_REQUEST)
         except jwt.InvalidTokenError:
             return HttpResponse("Invalid token", status=status.HTTP_400_BAD_REQUEST)
+
+class CustomTokenRefreshView(TokenRefreshView):
+    def post(self,request,*args,**kwargs):
+        try:
+            old_refresh_token = RefreshToken(request.data['refresh'])
+            user = User.objects.get(id=old_refresh_token['user_id'])
+            new_refresh = RefreshToken.for_user(user)
+            new_refresh = RefreshToken.for_user(user)
+            return Response({
+                'message':'User logged in',
+                'status':'success',
+                'data':{
+                    'access':str(new_refresh.access_token),
+                    'refresh':str(new_refresh)
+                }
+            },status=status.HTTP_200_OK)
+        except Exception as e:
+            print(f"Error:{str(e)}")
+            print(traceback.format_exc())
+            return Response({
+                'message':'User not logged in',
+                'status':'error',
+                'data':None
+            },status=status.HTTP_401_UNAUTHORIZED)
 
 
 # google oauth 
