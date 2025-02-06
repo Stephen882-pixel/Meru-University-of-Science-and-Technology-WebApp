@@ -76,7 +76,7 @@ class CommunityProfile(models.Model):
     name = models.CharField(max_length=200)
     community_lead = models.CharField(max_length=200)
     co_lead = models.CharField(max_length=200, blank=True, null=True)
-    treasurer = models.CharField(max_length=200, blank=True, null=True)
+    #treasurer = models.CharField(max_length=200, blank=True, null=True)
     secretary = models.CharField(max_length=200, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
     phone_number = models.CharField(max_length=20, blank=True, null=True)

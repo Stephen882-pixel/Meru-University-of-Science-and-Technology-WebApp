@@ -128,7 +128,7 @@ class CommunityProfileSerializer(serializers.ModelSerializer):
         model = CommunityProfile
         fields = [
             'id', 'name', 'community_lead', 'co_lead', 
-            'treasurer', 'secretary', 'email', 'phone_number', 
+            'secretary', 'email', 'phone_number', 
             'github_link', 'linkedin_link', 'description', 
             'founding_date',  'is_recruiting', 
             'tech_stack','members','total_members','sessions'

@@ -379,12 +379,82 @@ class CommunityProfileViewSet(viewsets.ModelViewSet):
     queryset = CommunityProfile.objects.all().order_by('id')
     serializer_class = CommunityProfileSerializer
 
-    # def get_permissions(self):
-    #     if self.action in ['create', 'update', 'partial_update', 'destroy']:
-    #         permission_classes = [IsAdminUser]
-    #     else:
-    #         permission_classes = [AllowAny]
-    #     return [permission() for permission in permission_classes]
+    def create(self,request,*args,**kwags):
+        try:
+            serializer = self.get_serializer(data=request.data)
+            if serializer.is_valid():
+                self.perform_create(serializer)
+                return Response({
+                    'message':'Community Created successfully',
+                    'status':'success',
+                    'data':serializer.data
+                },status=status.HTTP_201_CREATED)
+
+            error_messages = "\n".join(
+                f"{field}:{', '.join(errors)}" for field, errors in serializer.errors.items()
+            )
+            return Response({
+                'message':f'Community Creation failed: {error_messages}',
+                'status':'failed',
+                'data':None
+            },status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({
+                'message': f'Error creating community: {str(e)}',
+                'status': 'failed',
+                'data': None
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+    def list(self,request,*args,**kwargs):
+        try:
+            queryset = self.filter_queryset(self.get_queryset())
+            page = self.paginate_queryset(queryset)
+
+            if page is not None:
+                serializer = self.get_serializer(page,many=True)
+                paginated_data = self.paginator.get_paginated_response(serializer.data)
+
+                return Response({
+                    'message':'Communities retrieved successfully',
+                    'status':'success',
+                    'data':{
+                        'count':paginated_data.data['count'],
+                        'next':paginated_data.data['next'],
+                        'previous':paginated_data.data['previous'],
+                        'results':paginated_data.data['results']
+                    }
+                },status=status.HTTP_200_OK)
+            serializer = self.get_serializer(queryset,many=True)
+            return Response({
+                'message':'Communities retrieved successfully',
+                'status':'success',
+                'data':serializer.data
+            },status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                'message':f'Error retrieving communities',
+                'status':'failed',
+                'data':None
+            },status=status.HTTP_400_BAD_REQUEST)
+    
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            serializer = self.get_serializer(instance)
+
+            return Response({
+                'message':'Community retrieved successfully',
+                'status':'success',
+                'data':serializer.data
+            },status=status.HTTP_200_OK)
+        except CommunityProfile.DoesNotExist:
+            return Response({
+                'message':'Community not found',
+                'status':'failed',
+                'data':None
+            },status=status.HTTP_400_BAD_REQUEST)
+
+
 
 class TestimonialViewSet(viewsets.ModelViewSet):
     queryset = Testimonial.objects.filter(is_approved=True)
@@ -410,11 +480,27 @@ class SessionCreateView(APIView):
             if session_serializer.is_valid():
                 # Save the session and associate it with the community
                 session_serializer.save(community=community)
-                return Response(session_serializer.data, status=status.HTTP_201_CREATED)
-            return Response(session_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                #return Response(session_serializer.data, status=status.HTTP_201_CREATED)
+                return Response({
+                    'message':'Session Updated Successfully',
+                    'status':'success',
+                    'data':session_serializer.data
+                },status=status.HTTP_201_CREATED)
+            else:
+                return Response({
+                    'message':session_serializer.errors,
+                    'status':'failed',
+                    'data':None
+                })
+            
 
         except CommunityProfile.DoesNotExist:
-            return Response({"detail": "Community not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({
+                'message':'Commmunity not found',
+                'status':'failed',
+                'data':None
+            },status=status.HTTP_400_BAD_REQUEST)
+            #return Response({"detail": "Community not found."}, status=status.HTTP_404_NOT_FOUND)
         
 
     
@@ -428,7 +514,12 @@ class CommunityMembersView(APIView):
 
         members = community.members.all()  # Fetch related members
         serializer = CommunityMemberSerializer(members, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({
+            'message':'Members retrieved successfully',
+            'status':'success',
+            'data':serializer.data
+        })
+        #return Response(serializer.data, status=status.HTTP_200_OK)
     
 
 class JoinCommunityView(APIView):
@@ -453,9 +544,14 @@ class JoinCommunityView(APIView):
             member = serializer.save(community=community)
             community.update_total_members()
             
-            return Response(
-                {"message": "Successfully joined the community!"}, 
-                status=status.HTTP_201_CREATED
-            )
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                "message": "Successfully joined the community!",
+                'status':'success',
+                'data':None
+                },status=status.HTTP_201_CREATED)
+        return Response({
+            'message':f'There was an error please try again: {serializer.errors}',
+            'status':'failed',
+            'data':None
+        },status=status.HTTP_400_BAD_REQUEST)
+        #return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
