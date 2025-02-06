@@ -287,9 +287,17 @@ JWT_ALGORITHM = "HS256"
 
 
 
+# AWS_ACCESS_KEY_ID = secrets['AWS_ACCESS_KEY_ID']
+# AWS_SECRET_ACCESS_KEY = secrets['AWS_SECRET_ACCESS_KEY']
+# AWS_STORAGE_BUCKET_NAME = secrets['AWS_STORAGE_BUCKET_NAME']
+
+
 AWS_ACCESS_KEY_ID = secrets['AWS_ACCESS_KEY_ID']
 AWS_SECRET_ACCESS_KEY = secrets['AWS_SECRET_ACCESS_KEY']
 AWS_STORAGE_BUCKET_NAME = secrets['AWS_STORAGE_BUCKET_NAME']
+AWS_S3_REGION_NAME = 'us-east-1'  # Replace with your region
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = 'public-read'
 
 FRONTEND_BASE_URL = "http://localhost:8000/api/account" # Replace with your frontend's actual base URL
 DEFAULT_FROM_EMAIL = "ondeyostephen0@gmail.com"

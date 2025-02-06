@@ -20,6 +20,11 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from rest_framework.pagination import PageNumberPagination
 import logging
+from rest_framework import viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from django.http import HttpResponse
+import pandas as pd
 
 
 class EventPagination(PageNumberPagination):
@@ -46,21 +51,35 @@ class EventViewSet(viewsets.ModelViewSet):
     serializer_class = EventsSerializer
     pagination_class = EventPagination
 
-   
-    def create(self,request,*args,**kwargs):
+    @action(detail=False, methods=['post'], url_path='add')
+    def add_event(self,request,*args,**kwargs):
+        # check if there is an image in the request
+        image_file = request.FILES.get('image_field')
+        data = request.data.copy()
+
+        if image_file:
+            data['image_field'] = image_file
         serializer=self.get_serializer(data=request.data)
         if serializer.is_valid():
-            event_instance = serializer.create(serializer.validated_data)
+            try:
+                event_instance = serializer.save()
+                return Response({
+                    'message':'Event Created successfully',
+                    'status':'success',
+                    'data':EventsSerializer(event_instance).data
+                },status=status.HTTP_201_CREATED)
+            except Exception as e:
+                return Response({
+                    'message':'Event Creation Failed',
+                    'status':serializer.errors,
+                    'data':None
+                },status=status.HTTP_400_BAD_REQUEST)
             return Response({
-                'message':'Event Created successfully',
-                'status':'success',
-                'data':EventsSerializer(event_instance).data
-            },status=status.HTTP_201_CREATED)
-        return Response({
-            'message':'Event Creation Failed',
-            'status':serializer.errors,
-            'data':None
-        },status=status.HTTP_400_BAD_REQUEST)
+                'message':'Event Creation failed',
+                'status':'failed',
+                'errors':serializer.errors,
+                'data':'None'
+            },status=status.HTTP_400_BAD_REQUEST)
     
     def update(self,request,*args,**kwargs):
         partial = kwargs.pop('partial',False)
@@ -81,8 +100,8 @@ class EventViewSet(viewsets.ModelViewSet):
             'errors':serializer.errors,
             'data':None
         },status=status.HTTP_400_BAD_REQUEST)
-    
-    def list(self, request, *args,**kwargs):
+    @action(detail=False, methods=['get'], url_path='view')
+    def view_events(self, request, *args,**kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
 
@@ -103,8 +122,8 @@ class EventViewSet(viewsets.ModelViewSet):
             }
         },status=status.HTTP_200_OK)
     
-
-    def retrieve(self, request, *args, **kwargs):
+    @action(detail=True, methods=['get'], url_path='view')
+    def view_single_event(self, request, *args, **kwargs):
         try:
             
             # Get the even ID from url kwargs
@@ -186,15 +205,6 @@ class ContactView(views.APIView):
 
         return Response({'message_name': message_name}, status=status.HTTP_200_OK)
     
-
-
-from rest_framework import viewsets
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from django.http import HttpResponse
-import pandas as pd
-
-
 class EventRegistrationViewSet(viewsets.ModelViewSet):
     queryset = EventRegistration.objects.all()
     serializer_class = EventRegistrationSerializer
@@ -518,8 +528,8 @@ class CommunityMembersView(APIView):
             'message':'Members retrieved successfully',
             'status':'success',
             'data':serializer.data
-        })
-        #return Response(serializer.data, status=status.HTTP_200_OK)
+        },status=status.HTTP_200_OK)
+        
     
 
 class JoinCommunityView(APIView):
@@ -554,4 +564,4 @@ class JoinCommunityView(APIView):
             'status':'failed',
             'data':None
         },status=status.HTTP_400_BAD_REQUEST)
-        #return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
