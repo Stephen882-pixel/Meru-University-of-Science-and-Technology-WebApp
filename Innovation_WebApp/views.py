@@ -51,8 +51,8 @@ class EventViewSet(viewsets.ModelViewSet):
     serializer_class = EventsSerializer
     pagination_class = EventPagination
 
-    @action(detail=False, methods=['post'], url_path='add')
-    def add_event(self,request,*args,**kwargs):
+    @action(methods=['post'], detail=False, url_path='add', url_name='add-event')
+    def create_event(self,request,*args,**kwargs):
         # check if there is an image in the request
         image_file = request.FILES.get('image_field')
         data = request.data.copy()
@@ -80,9 +80,10 @@ class EventViewSet(viewsets.ModelViewSet):
                 'errors':serializer.errors,
                 'data':'None'
             },status=status.HTTP_400_BAD_REQUEST)
-    
-    def update(self,request,*args,**kwargs):
-        partial = kwargs.pop('partial',False)
+    @action(methods=['put', 'patch'], detail=True, url_path='update', url_name='update-event')
+    def update_event(self,request,*args,**kwargs):
+        #partial = kwargs.pop('partial',False)
+        partial = kwargs.get('partial', request.method == 'PATCH')
         instance = self.get_object()
         serializer = self.get_serializer(instance,data=request.data,partial=partial)
 
@@ -100,8 +101,9 @@ class EventViewSet(viewsets.ModelViewSet):
             'errors':serializer.errors,
             'data':None
         },status=status.HTTP_400_BAD_REQUEST)
-    @action(detail=False, methods=['get'], url_path='view')
-    def view_events(self, request, *args,**kwargs):
+    
+    @action(detail=False, methods=['get'], url_path='list', url_name='list-events')
+    def list_events(self, request, *args,**kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
 
@@ -122,8 +124,25 @@ class EventViewSet(viewsets.ModelViewSet):
             }
         },status=status.HTTP_200_OK)
     
-    @action(detail=True, methods=['get'], url_path='view')
-    def view_single_event(self, request, *args, **kwargs):
+    @action(detail=True, methods=['delete'], url_path='delete', url_name='delete-event')
+    def destroy_event(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            instance.delete()
+            return Response({
+                'message':'Event deleted successfully',
+                'status':'success',
+                'data':None
+            },status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response({
+                'message':'Error deleting the event',
+                'status':'failed',
+                'data':None
+            }, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=True, methods=['get'], url_path='view', url_name='view-event')
+    def retrieve_event(self, request, *args, **kwargs):
         try:
             
             # Get the even ID from url kwargs
