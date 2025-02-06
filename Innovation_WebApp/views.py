@@ -1,3 +1,4 @@
+import csv
 from django.http import HttpResponse
 from rest_framework import viewsets, views, status,permissions
 from rest_framework.response import Response
@@ -15,12 +16,122 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from rest_framework.views import APIView
 
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from rest_framework.pagination import PageNumberPagination
+import logging
 
 
-#this is the event with s3 functionality    
+class EventPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+    def get_paginated_response(self, data):
+        return Response({
+            'message':'Events retrieved successfuly',
+            'status':'success',
+            'data':{
+                'count':self.page.paginator.count,
+                'next':self.get_next_link(),
+                'previous':self.get_previous_link(),
+                'results':data
+            }
+        })
+
+#this is the event with s3 functionality   
+@method_decorator(csrf_exempt, name='dispatch') 
 class EventViewSet(viewsets.ModelViewSet):
     queryset = Events.objects.all()
     serializer_class = EventsSerializer
+    pagination_class = EventPagination
+
+   
+    def create(self,request,*args,**kwargs):
+        serializer=self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            event_instance = serializer.create(serializer.validated_data)
+            return Response({
+                'message':'Event Created successfully',
+                'status':'success',
+                'data':EventsSerializer(event_instance).data
+            },status=status.HTTP_201_CREATED)
+        return Response({
+            'message':'Event Creation Failed',
+            'status':serializer.errors,
+            'data':None
+        },status=status.HTTP_400_BAD_REQUEST)
+    
+    def update(self,request,*args,**kwargs):
+        partial = kwargs.pop('partial',False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance,data=request.data,partial=partial)
+
+        if serializer.is_valid():
+            event_instance = serializer.save()
+            return Response({
+                'message':'Event Updated Successfully',
+                'status':'success',
+                'data':EventsSerializer(event_instance).data
+            },status=status.HTTP_200_OK)
+        
+        return Response({
+            'message':'Event update failed',
+            'status':'error',
+            'errors':serializer.errors,
+            'data':None
+        },status=status.HTTP_400_BAD_REQUEST)
+    
+    def list(self, request, *args,**kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+
+        if page is not None:
+            serializer = self.get_serializer(page,many=True)
+            return self.get_paginated_response(serializer.data)
+        # Fallback incase pagination fails or is disabled
+        serializer=self.get_serializer(queryset,many=True)
+
+        return Response({
+            'message':'Events retrieved successfully',
+            'status':'success',
+            'data':{
+                'count':queryset.count(),
+                'next':None,
+                'previous':None,
+                'results':serializer.data
+            }
+        },status=status.HTTP_200_OK)
+    
+
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            
+            # Get the even ID from url kwargs
+            event_id = kwargs.get('pk')
+            if not event_id:
+                return Response({
+                    'message':'Event ID not provided',
+                    'status':'failed',
+                    'data':None
+                },status=status.HTTP_400_BAD_REQUEST)
+            
+            instance = self.get_object()
+            serializer = self.get_serializer(instance)
+            return Response({
+                'message':'Event details fetched successfully',
+                'status':'success',
+                'data':serializer.data
+            },status=status.HTTP_200_OK)
+        except Exception as e:
+            
+            return Response({
+                'message':'Error fetching the event',
+                'status':'failed',
+                'data':None
+            },status=status.HTTP_400_BAD_REQUEST)
+    
+
 
 
 class NewsletterSendView(views.APIView):
@@ -83,49 +194,157 @@ from rest_framework.response import Response
 from django.http import HttpResponse
 import pandas as pd
 
+
 class EventRegistrationViewSet(viewsets.ModelViewSet):
     queryset = EventRegistration.objects.all()
     serializer_class = EventRegistrationSerializer
 
-    @action(detail=False, methods=['GET'])
-    def export_registrations(self, request):
-        event_id = request.query_params.get('event_id')
+    def get_queryset(self):
+        event_pk = self.kwargs.get('event_pk')
+        if event_pk:
+            return EventRegistration.objects.filter(event_id=event_pk)
+        return super().get_queryset()
     
-        if not event_id:
-            return Response({'error': 'Event ID is required'}, status=400)
+    @action(detail=False, methods=['get'], url_path='user_id')
+    def get_user_registration(self,request,event_pk=None):
+        try:
+            if not event_pk:
+                return Response({
+                    'message':'Event ID missing',
+                    'status':'failed',
+                    'data':None
+                },status=status.HTTP_400_BAD_REQUEST)
+            registration = EventRegistration.objects.filter(
+                event_id=event_pk,
+                email=request.user.email
+            ).first()
 
-    # Filter registrations for the specific event
-        registrations = EventRegistration.objects.filter(event_id=event_id)
+            if not registration:
+                return Response({
+                    'message':'No registration found for this user in this event',
+                    'status':'failed',
+                    'data':None
+                },status=status.HTTP_400_BAD_REQUEST)
+            serializer = self.get_serializer(registration)
+            return Response({
+                'message':'User registration details retrieved successfully',
+                'status':'success',
+                'data':serializer.data
+            },status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                'message':f'Error retrieving registration: {str(e)}',
+                'status':'failed',
+                'data':None
+            })
     
+    def list(self,request,*args,**kwargs):
+        try:
+            queryset = self.filter_queryset(self.get_queryset())
+            page = self.paginate_queryset(queryset)
+
+            if page is not None:
+                serializer = self.get_serializer(page,many=True)
+                paginated_data = self.paginator.get_paginated_response(serializer.data)
+
+                return Response({
+                    'message':'Event registrations retrieved successfully',
+                    'status':'success',
+                    'data':{
+                        'count':paginated_data.data['count'],
+                        'next':paginated_data.data['next'],
+                        'previous':paginated_data.data['previous'],
+                        'results':paginated_data.data['results']
+                    }
+                },status=status.HTTP_200_OK)
+            serializer = self.get_serializer(queryset,many=True)
+            return Response({
+                'message':'Event registrations retrieved successfully',
+                'status':'success',
+                'data':{
+                    'count':len(serializer.data),
+                    'next':None,
+                    'previous':None,
+                    'data':serializer.data
+                }
+            },status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                'message':f'Error retreiving registrations:{str(e)}',
+                'status':'failed',
+                'data':None
+            },status=status.HTTP_400_BAD_REQUEST)
+        
+
+    def create(self, request, *args, **kwargs):
+        event_pk = self.kwargs.get('event_pk')
+        if not event_pk:
+            return Response({
+                'message': 'Event ID is missing in the request URL',
+                'status': 'failed',
+                'data': None
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+        mutable_data = request.data.copy()
+        mutable_data['event'] = event_pk
+        serializer = self.get_serializer(data=mutable_data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                'message': 'Successfully registered for the event',
+                'status': 'Success',
+                'data': None
+            }, status=status.HTTP_200_OK)
+        
+        error_messages = "\n".join(
+            f"{field}: {', '.join(errors)}" for field, errors in serializer.errors.items()
+        )
+        return Response({
+            'message': f"Event Registration failed: {error_messages}",
+            'status': 'failed',
+            'data': None
+        }, status=status.HTTP_400_BAD_REQUEST)
     
-        registration_data = []
-        for reg in registrations:
-            reg_dict = {
-                'full_name': reg.full_name,
-                'email': reg.email,
-                'age_bracket': reg.age_bracket,
-                'course': reg.course,
-                'educational_level': reg.educational_level,
-                'phone_number': reg.phone_number,
-                'ticket_number': str(reg.ticket_number),
-                'registration_timestamp': reg.registration_timestamp.replace(tzinfo=None) if reg.registration_timestamp else None
-            }
-            registration_data.append(reg_dict)
+
     
-  
-        df = pd.DataFrame(registration_data)
+    @action(detail=False, methods=['get'], url_path='export')
+    def export_registrations(self, request, event_pk=None):
+        if not event_pk:
+            return Response({"error": "Event ID is required"}, status=400)
+        
+        registrations = EventRegistration.objects.filter(event_id=event_pk)
     
-  
-        response = HttpResponse(
-        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-         )
-        response['Content-Disposition'] = f'attachment; filename=event_registrations_{event_id}.xlsx'
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="event_{event_pk}_registrations.csv"'
     
-  
-        df.to_excel(response, index=False)
+        writer = csv.writer(response)
+        writer.writerow((
+            'UID', 
+            'Full Name', 
+            'Email', 
+            'Course',
+            'Educational Level',
+            'Phone Number',
+            'Expectations',
+            'Registration Date',
+            'Ticket Number'
+        ))
+    
+        for registration in registrations:
+            writer.writerow((
+                registration.uid, 
+                registration.full_name, 
+                registration.email, 
+                registration.course,
+                registration.educational_level,
+                registration.phone_number,
+                registration.expectations,
+                registration.registration_timestamp,
+                registration.ticket_number
+            ))
     
         return response
-    
 
 def send_registration_confirmation(registration):
     # Ticket email template

@@ -1,4 +1,5 @@
-from requests import Session
+from grpc import Status
+from requests import Response, Session
 from rest_framework import serializers
 
 from Innovation_WebApp.Email import send_ticket_email
@@ -14,48 +15,6 @@ class SubscribedUsersSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubscribedUsers
         fields = ['id', 'email', 'created_date']
-
-
-
-#this one has s3 bucket funcionality
-# class EventsSerializer(serializers.ModelSerializer):
-#     image_field = serializers.ImageField(write_only=True, required=False)
-
-#     class Meta:
-#         model = Events
-#         fields = '__all__'
-#         extra_kwargs = {
-#             'image': {'read_only': True}  # The `image` field will be read-only, URL is auto-filled.
-#         }
-
-#     def update(self, instance, validated_data):
-#         # Extract the `image_field` data from the request
-#         image_file = validated_data.pop('image', None)
-
-#         if image_file:
-#             # Initialize the S3 client
-#             s3_client = boto3.client(
-#                 's3',
-#                 aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-#                 aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-#             )
-
-#             # Generate a unique file name
-#             filename = f"events/{uuid.uuid4()}_{image_file.name}"
-
-#             # Upload the file to the S3 bucket
-#             s3_client.upload_fileobj(
-#                 image_file,
-#                 settings.AWS_STORAGE_BUCKET_NAME,
-#                 filename,
-#                 ExtraArgs={'ContentType': image_file.content_type}  # Ensure correct content type
-#             )
-
-#             # Generate the public URL for the uploaded image
-#             instance.image = f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/{filename}"
-
-#         # Update other fields and save the instance
-#         return super().update(instance, validated_data)
 
 
 class EventsSerializer(serializers.ModelSerializer):
@@ -99,6 +58,8 @@ class EventsSerializer(serializers.ModelSerializer):
             event_instance.save()
 
         return event_instance
+        
+   
 
     def update(self, instance, validated_data):
         # Extract `image_field` from the validated data
@@ -138,7 +99,8 @@ class EventRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = EventRegistration
         fields = '__all__'
-        read_only_fields = ['uid', 'registration_timestamp', 'ticket_number']
+        #exclude = ('uid',)
+        read_only_fields = [ 'registration_timestamp', 'ticket_number']
 
     def create(self, validated_data):
         registration = super().create(validated_data)

@@ -130,7 +130,8 @@ class LoginView(APIView):
             return Response({
                 'message':'Login successfull',
                 'status': 'success',
-                'tokens': tokens,
+                'data':tokens
+                
             }, status=status.HTTP_200_OK)
 
         except Exception as e:
