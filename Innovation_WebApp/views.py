@@ -109,11 +109,7 @@ class ContactView(views.APIView):
     
 
 
-from rest_framework import viewsets
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from django.http import HttpResponse
-import pandas as pd
+
 
 class EventRegistrationViewSet(viewsets.ModelViewSet):
     queryset = EventRegistration.objects.all()
