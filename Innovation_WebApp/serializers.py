@@ -36,9 +36,36 @@ class EventsSerializer(serializers.ModelSerializer):
 
         # Handle S3 upload if an image is provided
         if image_file:
-            try:
+            # try:
         
-                s3_client = boto3.client(
+            #     s3_client = boto3.client(
+            #         's3',
+            #         aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+            #         aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+            #         region_name='us-east-1'
+            #     )
+
+            #     # Generate a unique file name
+            #     filename = f"event_images/{uuid.uuid4()}_{image_file.name}"
+
+            #     # Upload the file to S3
+            #     s3_client.upload_fileobj(
+            #         image_file,
+            #         settings.AWS_STORAGE_BUCKET_NAME,
+            #         filename,
+            #         ExtraArgs={
+            #             'ContentType': image_file.content_type,
+            #             'ACL': 'public-read'  # Make the file publicly readable
+            #         }
+            #     )
+
+            #     # Set the public S3 URL in the `image` field
+            #     event_instance.image = f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/{filename}"
+            #     event_instance.save()
+            # except Exception as e:
+            #     print(f'Error uploading to s3: {str(e)}')
+
+            s3_client = boto3.client(
                     's3',
                     aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
                     aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
@@ -46,24 +73,22 @@ class EventsSerializer(serializers.ModelSerializer):
                 )
 
                 # Generate a unique file name
-                filename = f"event_images/{uuid.uuid4()}_{image_file.name}"
+            filename = f"event_images/{uuid.uuid4()}_{image_file.name}"
 
                 # Upload the file to S3
-                s3_client.upload_fileobj(
+            s3_client.upload_fileobj(
                     image_file,
                     settings.AWS_STORAGE_BUCKET_NAME,
                     filename,
                     ExtraArgs={
                         'ContentType': image_file.content_type,
-                        'ACL': 'public-read'  # Make the file publicly readable
+                        # 'ACL': 'public-read'  # Make the file publicly readable
                     }
                 )
 
                 # Set the public S3 URL in the `image` field
-                event_instance.image = f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/{filename}"
-                event_instance.save()
-            except Exception as e:
-                print(f'Error uploading to s3: {str(e)}')
+            event_instance.image = f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/{filename}"
+            event_instance.save()
         return event_instance
         
    

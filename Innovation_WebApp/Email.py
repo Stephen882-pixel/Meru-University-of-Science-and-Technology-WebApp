@@ -1,5 +1,6 @@
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 
 def send_ticket_email(registration):
     ticket_details = {
@@ -12,20 +13,15 @@ def send_ticket_email(registration):
     }
 
     subject = f'Event Ticket: {registration.event.name}'
-    message = f"""
-    Event Ticket Details:
-    Ticket Number: {ticket_details['ticket_number']}
-    Event: {ticket_details['event_name']}
-    Date: {ticket_details['event_date']}
-    Location: {ticket_details['event_location']}
-    Registered By: {ticket_details['participant_name']}
-    """
+    html_message = render_to_string('email/send_email.html', {'ticket_details': ticket_details})
+    plain_message = strip_tags(html_message)
     
-    send_mail(
+    email = EmailMultiAlternatives(
         subject,
-        message,
+        plain_message,
         'ondeyostephen0@gmail.com',  # From email
-        [registration.email],    # To email
-        fail_silently=False,
+        [registration.email]    # To email
     )
-    
+    email.attach_alternative(html_message, "text/html")
+    email.send(fail_silently=False)
+

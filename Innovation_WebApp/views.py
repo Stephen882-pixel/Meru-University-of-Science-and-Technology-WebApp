@@ -223,6 +223,7 @@ class ContactView(views.APIView):
         )
 
         return Response({'message_name': message_name}, status=status.HTTP_200_OK)
+    
 
 class EventRegistrationViewSet(viewsets.ModelViewSet):
     queryset = EventRegistration.objects.all()

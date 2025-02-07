@@ -163,21 +163,7 @@ CORS_ALLOW_ALL_ORIGINS = True #this is only for development
 
 ROOT_URLCONF = 'MUST.urls'
 
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-            ],
-        },
-    },
-]
+
 
 WSGI_APPLICATION = 'MUST.wsgi.application'
 
@@ -252,7 +238,6 @@ AUTHENTICATION_BACKENDS = (
 ACCOUNT_EMAIL_VERIFICATION = "none"
 LOGIN_REDIRECT_URL = "/"  # Redirect URL after successful login
 LOGOUT_REDIRECT_URL = "/" # Redirect URL after logout
-
 
 
 
