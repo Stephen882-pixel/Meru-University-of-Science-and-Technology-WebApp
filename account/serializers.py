@@ -23,7 +23,7 @@ class RegisterSerializer(serializers.Serializer):
     email = serializers.EmailField(max_length=50)
     username = serializers.CharField(max_length=50)
     password = serializers.CharField(write_only=True)
-    registration_no = serializers.CharField(max_length=50)
+    #registration_no = serializers.CharField(max_length=50)
     course = serializers.CharField(max_length=50)
 
     def validate_username(self, value):
@@ -41,11 +41,6 @@ class RegisterSerializer(serializers.Serializer):
         if not re.search(r'[0-9]', value):
             raise serializers.ValidationError("Password must contain at least one number")
         return value
-    
-    def validate_registration_no(self,value):
-        if value.isspace():
-            raise serializers.ValidationError("Please provide registration number")
-        return value.upper()
     
     def validate_course(self,value):
         if value.isspace():
@@ -66,7 +61,7 @@ class RegisterSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         # Extract user profile
-        registration_no = validated_data.pop('registration_no')
+        #registration_no = validated_data.pop('registration_no')
         course = validated_data.pop('course')
 
         # Create User with 'is_active=False'
@@ -80,7 +75,7 @@ class RegisterSerializer(serializers.Serializer):
         )
         UserProfile.objects.create(
             user=user,
-            registration_no=registration_no,
+            #registration_no=registration_no,
             course=course
         )
         return user

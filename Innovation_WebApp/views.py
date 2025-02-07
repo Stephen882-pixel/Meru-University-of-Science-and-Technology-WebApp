@@ -1,3 +1,4 @@
+import csv
 from django.http import HttpResponse
 from rest_framework import viewsets, views, status,permissions
 from rest_framework.response import Response
@@ -15,45 +16,161 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from rest_framework.views import APIView
 
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from rest_framework.pagination import PageNumberPagination
+import logging
+from rest_framework import viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from django.http import HttpResponse
+import pandas as pd
 
 
-# class EventsViewSet(viewsets.ModelViewSet):
-#     queryset = Events.objects.all()
-#     serializer_class = EventsSerializer
+class EventPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
-#     def create(self, request, *args, **kwargs):
-#         image_file = request.FILES.get('image')
-#         if image_file:
-#             # Convert the image to base64 string
-#             image_data = image_file.read()
-#             base64_image = base64.b64encode(image_data).decode("utf-8")
-#             request.data['image'] = base64_image
-#         return super().create(request, *args, **kwargs)
+    def get_paginated_response(self, data):
+        return Response({
+            'message':'Events retrieved successfuly',
+            'status':'success',
+            'data':{
+                'count':self.page.paginator.count,
+                'next':self.get_next_link(),
+                'previous':self.get_previous_link(),
+                'results':data
+            }
+        })
 
-
-#this is the event with s3 functionality    
+#this is the event with s3 functionality   
+@method_decorator(csrf_exempt, name='dispatch') 
 class EventViewSet(viewsets.ModelViewSet):
     queryset = Events.objects.all()
     serializer_class = EventsSerializer
+    pagination_class = EventPagination
 
-# class NewsletterSendView(views.APIView):
-#     #permission_classes = [IsAdminUser]
-#
-#     def post(self, request):
-#         subject = request.data.get('subject')
-#         receivers = request.data.get('receivers')
-#         message = request.data.get('message')
-#
-#         receivers_list = [receiver.strip() for receiver in receivers.split(',')]
-#
-#         user_email = request.user.email if request.user.is_authenticated and request.user.email else 'default@example.com'
-#         mail = EmailMessage(subject, message, f"Meru University Science Innovators Club <{user_email}>", bcc=receivers_list)
-#         mail.content_subtype = 'html'
-#
-#         if mail.send():
-#             return Response({'message': 'Email sent successfully'}, status=status.HTTP_200_OK)
-#         else:
-#             return Response({'message': 'There was an error sending the email'}, status=status.HTTP_400_BAD_REQUEST)
+    @action(methods=['post'], detail=False, url_path='add', url_name='add-event')
+    def create_event(self,request,*args,**kwargs):
+        # check if there is an image in the request
+        image_file = request.FILES.get('image_field')
+        data = request.data.copy()
+
+        if image_file:
+            data['image_field'] = image_file
+        serializer=self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                event_instance = serializer.save()
+                return Response({
+                    'message':'Event Created successfully',
+                    'status':'success',
+                    'data':EventsSerializer(event_instance).data
+                },status=status.HTTP_201_CREATED)
+            except Exception as e:
+                return Response({
+                    'message':'Event Creation Failed',
+                    'status':serializer.errors,
+                    'data':None
+                },status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                'message':'Event Creation failed',
+                'status':'failed',
+                'errors':serializer.errors,
+                'data':'None'
+            },status=status.HTTP_400_BAD_REQUEST)
+    @action(methods=['put', 'patch'], detail=True, url_path='update', url_name='update-event')
+    def update_event(self,request,*args,**kwargs):
+        #partial = kwargs.pop('partial',False)
+        partial = kwargs.get('partial', request.method == 'PATCH')
+        instance = self.get_object()
+        serializer = self.get_serializer(instance,data=request.data,partial=partial)
+
+        if serializer.is_valid():
+            event_instance = serializer.save()
+            return Response({
+                'message':'Event Updated Successfully',
+                'status':'success',
+                'data':EventsSerializer(event_instance).data
+            },status=status.HTTP_200_OK)
+        
+        return Response({
+            'message':'Event update failed',
+            'status':'error',
+            'errors':serializer.errors,
+            'data':None
+        },status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=['get'], url_path='list', url_name='list-events')
+    def list_events(self, request, *args,**kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+
+        if page is not None:
+            serializer = self.get_serializer(page,many=True)
+            return self.get_paginated_response(serializer.data)
+        # Fallback incase pagination fails or is disabled
+        serializer=self.get_serializer(queryset,many=True)
+
+        return Response({
+            'message':'Events retrieved successfully',
+            'status':'success',
+            'data':{
+                'count':queryset.count(),
+                'next':None,
+                'previous':None,
+                'results':serializer.data
+            }
+        },status=status.HTTP_200_OK)
+    
+    @action(detail=True, methods=['delete'], url_path='delete', url_name='delete-event')
+    def destroy_event(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            instance.delete()
+            return Response({
+                'message':'Event deleted successfully',
+                'status':'success',
+                'data':None
+            },status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response({
+                'message':'Error deleting the event',
+                'status':'failed',
+                'data':None
+            }, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=True, methods=['get'], url_path='view', url_name='view-event')
+    def retrieve_event(self, request, *args, **kwargs):
+        try:
+            
+            # Get the even ID from url kwargs
+            event_id = kwargs.get('pk')
+            if not event_id:
+                return Response({
+                    'message':'Event ID not provided',
+                    'status':'failed',
+                    'data':None
+                },status=status.HTTP_400_BAD_REQUEST)
+            
+            instance = self.get_object()
+            serializer = self.get_serializer(instance)
+            return Response({
+                'message':'Event details fetched successfully',
+                'status':'success',
+                'data':serializer.data
+            },status=status.HTTP_200_OK)
+        except Exception as e:
+            
+            return Response({
+                'message':'Error fetching the event',
+                'status':'failed',
+                'data':None
+            },status=status.HTTP_400_BAD_REQUEST)
+    
+
+
 
 class NewsletterSendView(views.APIView):
     def post(self, request):
@@ -106,54 +223,157 @@ class ContactView(views.APIView):
         )
 
         return Response({'message_name': message_name}, status=status.HTTP_200_OK)
-    
-
-
-
 
 class EventRegistrationViewSet(viewsets.ModelViewSet):
     queryset = EventRegistration.objects.all()
     serializer_class = EventRegistrationSerializer
 
-    @action(detail=False, methods=['GET'])
-    def export_registrations(self, request):
-        event_id = request.query_params.get('event_id')
+    def get_queryset(self):
+        event_pk = self.kwargs.get('event_pk')
+        if event_pk:
+            return EventRegistration.objects.filter(event_id=event_pk)
+        return super().get_queryset()
     
-        if not event_id:
-            return Response({'error': 'Event ID is required'}, status=400)
+    @action(detail=False, methods=['get'], url_path='user_id')
+    def get_user_registration(self,request,event_pk=None):
+        try:
+            if not event_pk:
+                return Response({
+                    'message':'Event ID missing',
+                    'status':'failed',
+                    'data':None
+                },status=status.HTTP_400_BAD_REQUEST)
+            registration = EventRegistration.objects.filter(
+                event_id=event_pk,
+                email=request.user.email
+            ).first()
 
-    # Filter registrations for the specific event
-        registrations = EventRegistration.objects.filter(event_id=event_id)
+            if not registration:
+                return Response({
+                    'message':'No registration found for this user in this event',
+                    'status':'failed',
+                    'data':None
+                },status=status.HTTP_400_BAD_REQUEST)
+            serializer = self.get_serializer(registration)
+            return Response({
+                'message':'User registration details retrieved successfully',
+                'status':'success',
+                'data':serializer.data
+            },status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                'message':f'Error retrieving registration: {str(e)}',
+                'status':'failed',
+                'data':None
+            })
     
+    def list(self,request,*args,**kwargs):
+        try:
+            queryset = self.filter_queryset(self.get_queryset())
+            page = self.paginate_queryset(queryset)
+
+            if page is not None:
+                serializer = self.get_serializer(page,many=True)
+                paginated_data = self.paginator.get_paginated_response(serializer.data)
+
+                return Response({
+                    'message':'Event registrations retrieved successfully',
+                    'status':'success',
+                    'data':{
+                        'count':paginated_data.data['count'],
+                        'next':paginated_data.data['next'],
+                        'previous':paginated_data.data['previous'],
+                        'results':paginated_data.data['results']
+                    }
+                },status=status.HTTP_200_OK)
+            serializer = self.get_serializer(queryset,many=True)
+            return Response({
+                'message':'Event registrations retrieved successfully',
+                'status':'success',
+                'data':{
+                    'count':len(serializer.data),
+                    'next':None,
+                    'previous':None,
+                    'data':serializer.data
+                }
+            },status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                'message':f'Error retreiving registrations:{str(e)}',
+                'status':'failed',
+                'data':None
+            },status=status.HTTP_400_BAD_REQUEST)
+        
+
+    def create(self, request, *args, **kwargs):
+        event_pk = self.kwargs.get('event_pk')
+        if not event_pk:
+            return Response({
+                'message': 'Event ID is missing in the request URL',
+                'status': 'failed',
+                'data': None
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+        mutable_data = request.data.copy()
+        mutable_data['event'] = event_pk
+        serializer = self.get_serializer(data=mutable_data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                'message': 'Successfully registered for the event',
+                'status': 'Success',
+                'data': None
+            }, status=status.HTTP_200_OK)
+        
+        error_messages = "\n".join(
+            f"{field}: {', '.join(errors)}" for field, errors in serializer.errors.items()
+        )
+        return Response({
+            'message': f"Event Registration failed: {error_messages}",
+            'status': 'failed',
+            'data': None
+        }, status=status.HTTP_400_BAD_REQUEST)
     
-        registration_data = []
-        for reg in registrations:
-            reg_dict = {
-                'full_name': reg.full_name,
-                'email': reg.email,
-                'age_bracket': reg.age_bracket,
-                'course': reg.course,
-                'educational_level': reg.educational_level,
-                'phone_number': reg.phone_number,
-                'ticket_number': str(reg.ticket_number),
-                'registration_timestamp': reg.registration_timestamp.replace(tzinfo=None) if reg.registration_timestamp else None
-            }
-            registration_data.append(reg_dict)
+
     
-  
-        df = pd.DataFrame(registration_data)
+    @action(detail=False, methods=['get'], url_path='export')
+    def export_registrations(self, request, event_pk=None):
+        if not event_pk:
+            return Response({"error": "Event ID is required"}, status=400)
+        
+        registrations = EventRegistration.objects.filter(event_id=event_pk)
     
-  
-        response = HttpResponse(
-        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-         )
-        response['Content-Disposition'] = f'attachment; filename=event_registrations_{event_id}.xlsx'
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="event_{event_pk}_registrations.csv"'
     
-  
-        df.to_excel(response, index=False)
+        writer = csv.writer(response)
+        writer.writerow((
+            'UID', 
+            'Full Name', 
+            'Email', 
+            'Course',
+            'Educational Level',
+            'Phone Number',
+            'Expectations',
+            'Registration Date',
+            'Ticket Number'
+        ))
+    
+        for registration in registrations:
+            writer.writerow((
+                registration.uid, 
+                registration.full_name, 
+                registration.email, 
+                registration.course,
+                registration.educational_level,
+                registration.phone_number,
+                registration.expectations,
+                registration.registration_timestamp,
+                registration.ticket_number
+            ))
     
         return response
-    
 
 def send_registration_confirmation(registration):
     # Ticket email template
@@ -188,12 +408,82 @@ class CommunityProfileViewSet(viewsets.ModelViewSet):
     queryset = CommunityProfile.objects.all().order_by('id')
     serializer_class = CommunityProfileSerializer
 
-    # def get_permissions(self):
-    #     if self.action in ['create', 'update', 'partial_update', 'destroy']:
-    #         permission_classes = [IsAdminUser]
-    #     else:
-    #         permission_classes = [AllowAny]
-    #     return [permission() for permission in permission_classes]
+    def create(self,request,*args,**kwags):
+        try:
+            serializer = self.get_serializer(data=request.data)
+            if serializer.is_valid():
+                self.perform_create(serializer)
+                return Response({
+                    'message':'Community Created successfully',
+                    'status':'success',
+                    'data':serializer.data
+                },status=status.HTTP_201_CREATED)
+
+            error_messages = "\n".join(
+                f"{field}:{', '.join(errors)}" for field, errors in serializer.errors.items()
+            )
+            return Response({
+                'message':f'Community Creation failed: {error_messages}',
+                'status':'failed',
+                'data':None
+            },status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({
+                'message': f'Error creating community: {str(e)}',
+                'status': 'failed',
+                'data': None
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+    def list(self,request,*args,**kwargs):
+        try:
+            queryset = self.filter_queryset(self.get_queryset())
+            page = self.paginate_queryset(queryset)
+
+            if page is not None:
+                serializer = self.get_serializer(page,many=True)
+                paginated_data = self.paginator.get_paginated_response(serializer.data)
+
+                return Response({
+                    'message':'Communities retrieved successfully',
+                    'status':'success',
+                    'data':{
+                        'count':paginated_data.data['count'],
+                        'next':paginated_data.data['next'],
+                        'previous':paginated_data.data['previous'],
+                        'results':paginated_data.data['results']
+                    }
+                },status=status.HTTP_200_OK)
+            serializer = self.get_serializer(queryset,many=True)
+            return Response({
+                'message':'Communities retrieved successfully',
+                'status':'success',
+                'data':serializer.data
+            },status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                'message':f'Error retrieving communities',
+                'status':'failed',
+                'data':None
+            },status=status.HTTP_400_BAD_REQUEST)
+    
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            serializer = self.get_serializer(instance)
+
+            return Response({
+                'message':'Community retrieved successfully',
+                'status':'success',
+                'data':serializer.data
+            },status=status.HTTP_200_OK)
+        except CommunityProfile.DoesNotExist:
+            return Response({
+                'message':'Community not found',
+                'status':'failed',
+                'data':None
+            },status=status.HTTP_400_BAD_REQUEST)
+
+
 
 class TestimonialViewSet(viewsets.ModelViewSet):
     queryset = Testimonial.objects.filter(is_approved=True)
@@ -205,16 +495,6 @@ class TestimonialViewSet(viewsets.ModelViewSet):
 
 
 
-# class CommunityCategoryViewSet(viewsets.ModelViewSet):
-#     queryset = CommunityCategory.objects.all()
-#     serializer_class = CommunityCategorySerializer
-    
-    # def get_permissions(self):
-    #     if self.action in ['create', 'update', 'partial_update', 'destroy']:
-    #         permission_classes = [IsAdminUser]
-    #     else:
-    #         permission_classes = [permissions.AllowAny]
-    #     return [permission() for permission in permission_classes]
 
 
 class SessionCreateView(APIView):
@@ -229,11 +509,27 @@ class SessionCreateView(APIView):
             if session_serializer.is_valid():
                 # Save the session and associate it with the community
                 session_serializer.save(community=community)
-                return Response(session_serializer.data, status=status.HTTP_201_CREATED)
-            return Response(session_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                #return Response(session_serializer.data, status=status.HTTP_201_CREATED)
+                return Response({
+                    'message':'Session Updated Successfully',
+                    'status':'success',
+                    'data':session_serializer.data
+                },status=status.HTTP_201_CREATED)
+            else:
+                return Response({
+                    'message':session_serializer.errors,
+                    'status':'failed',
+                    'data':None
+                })
+            
 
         except CommunityProfile.DoesNotExist:
-            return Response({"detail": "Community not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({
+                'message':'Commmunity not found',
+                'status':'failed',
+                'data':None
+            },status=status.HTTP_400_BAD_REQUEST)
+            #return Response({"detail": "Community not found."}, status=status.HTTP_404_NOT_FOUND)
         
 
     
@@ -247,7 +543,12 @@ class CommunityMembersView(APIView):
 
         members = community.members.all()  # Fetch related members
         serializer = CommunityMemberSerializer(members, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({
+            'message':'Members retrieved successfully',
+            'status':'success',
+            'data':serializer.data
+        },status=status.HTTP_200_OK)
+        
     
 
 class JoinCommunityView(APIView):
@@ -272,9 +573,14 @@ class JoinCommunityView(APIView):
             member = serializer.save(community=community)
             community.update_total_members()
             
-            return Response(
-                {"message": "Successfully joined the community!"}, 
-                status=status.HTTP_201_CREATED
-            )
+            return Response({
+                "message": "Successfully joined the community!",
+                'status':'success',
+                'data':None
+                },status=status.HTTP_201_CREATED)
+        return Response({
+            'message':f'There was an error please try again: {serializer.errors}',
+            'status':'failed',
+            'data':None
+        },status=status.HTTP_400_BAD_REQUEST)
         
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

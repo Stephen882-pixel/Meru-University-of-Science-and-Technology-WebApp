@@ -12,7 +12,7 @@ class PasswordResetRequest(models.Model):
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    registration_no = models.CharField(max_length=50)
+    #registration_no = models.CharField(max_length=50)
     course = models.CharField(max_length=50)
 
 

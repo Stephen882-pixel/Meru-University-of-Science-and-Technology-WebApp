@@ -5,6 +5,7 @@ import uuid
 from django.core.validators import EmailValidator,MinValueValidator, MaxValueValidator
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
+import hashlib
 
 #from django.contrib.auth.models import User
 
@@ -17,7 +18,14 @@ class SubscribedUsers(models.Model):
 
 
 class Events(models.Model):
+    CATEGORY_CHOICE=[
+        ('WEB','Web Development'),
+        ('CYBERSEC','Cyber Security'),
+        ('ANDROID','Android Development'),
+        ('AI','Artificial Intelligence'),
+    ]
     name = models.CharField(max_length=100)
+    category=models.CharField(max_length=10,choices=CATEGORY_CHOICE,null=False,default='Web Development')
     title = models.CharField(max_length=200)
     description = models.TextField()
     image = models.URLField(default="event_images/default.png")  # S3 image URL will be stored here
@@ -26,48 +34,37 @@ class Events(models.Model):
     organizer = models.CharField(max_length=100)
     contact_email = models.EmailField(null=True, blank=True)
     is_virtual = models.BooleanField(default=False)
-    registration_link = models.URLField(null=True, blank=True)
+    #registration_link = models.URLField(null=True, blank=True)
 
     def __str__(self):
         return self.title
     
 
 class EventRegistration(models.Model):
-    AGE_BRACKETS = [
-        ('16-18', '16-18'),
-        ('19-21', '19-21'),
-        ('22-24', '22-24'),
-        ('25+', '25 and above')
-    ]
+
 
     EDUCATION_LEVELS = [
-    ('year_1', 'Year 1'),
-    ('year_2', 'Year 2'),
-    ('year_3', 'Year 3'),
-    ('year_4', 'Year 4'),
-    ('postgraduate', 'Postgraduate')
+    ('1', 'Year 1'),
+    ('2', 'Year 2'),
+    ('3', 'Year 3'),
+    ('4', 'Year 4'),
     ]
     uid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     event = models.ForeignKey('Events', on_delete=models.CASCADE, related_name='registrations')
     full_name = models.CharField(max_length=200)
     email = models.EmailField(validators=[EmailValidator()])
-    age_bracket = models.CharField(max_length=20, choices=AGE_BRACKETS)
-    #year_of_study = models.CharField(max_length=50)
     course = models.CharField(max_length=200)
     educational_level = models.CharField(max_length=20, choices=EDUCATION_LEVELS)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
+    expectations = models.CharField(max_length=100,null=True)
     registration_timestamp = models.DateTimeField(auto_now_add=True)
     ticket_number = models.UUIDField(default=uuid.uuid4, unique=True)
+
+
 
     def __str__(self):
         return f"{self.full_name} - {self.event.name}"
     
-# class CommunityCategory(models.Model):
-#     name = models.CharField(max_length=100, unique=True)
-#     description = models.TextField(blank=True, null=True)
-
-#     def __str__(self):
-#         return self.name
     
 class CommunityProfile(models.Model):
     MEETING_TYPES = [
@@ -79,7 +76,7 @@ class CommunityProfile(models.Model):
     name = models.CharField(max_length=200)
     community_lead = models.CharField(max_length=200)
     co_lead = models.CharField(max_length=200, blank=True, null=True)
-    treasurer = models.CharField(max_length=200, blank=True, null=True)
+    #treasurer = models.CharField(max_length=200, blank=True, null=True)
     secretary = models.CharField(max_length=200, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
     phone_number = models.CharField(max_length=20, blank=True, null=True)

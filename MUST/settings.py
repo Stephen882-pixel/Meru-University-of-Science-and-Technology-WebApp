@@ -240,15 +240,7 @@ EMAIL_PORT = 587
 EMAIL_HOST_USER = secrets['EMAIL_HOST_USER']
 EMAIL_HOST_PASSWORD = secrets['EMAIL_HOST_PASSWORD']
 EMAIL_USE_TLS = True
-#
-# with open(r"C:/Users/Stephen/Downloads/Encapsulation image.png", "rb") as image_file:
-#     image_data = image_file.read()
-#
-#     import base64
-#
-#     base64_image = base64.b64encode(image_data).decode("utf-8")
-#
-#     print(base64_image)
+
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend"
@@ -289,23 +281,23 @@ GITHUB_REDIRECT_URI = "http://localhost:8000/accounts/github/login/callback/"
 JWT_SECRET = secrets['JWT_SECRET']
 JWT_ALGORITHM = "HS256"
 
-# SIMPLE_JWT = {
-#     'ACCESS_TOKEN_LIFETIME': timedelta(hours=24),
-#     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-#     'ALGORITHM': 'HS256',
-#     'SIGNING_KEY': SECRET_KEY,
-#     'USER_ID_FIELD': 'developer_id',
-#     'USER_ID_CLAIM': 'user_id',
-#     'AUTH_HEADER_TYPES': ('Bearer',),
-# }
 
 
 
+
+
+
+# AWS_ACCESS_KEY_ID = secrets['AWS_ACCESS_KEY_ID']
+# AWS_SECRET_ACCESS_KEY = secrets['AWS_SECRET_ACCESS_KEY']
+# AWS_STORAGE_BUCKET_NAME = secrets['AWS_STORAGE_BUCKET_NAME']
 
 
 AWS_ACCESS_KEY_ID = secrets['AWS_ACCESS_KEY_ID']
 AWS_SECRET_ACCESS_KEY = secrets['AWS_SECRET_ACCESS_KEY']
 AWS_STORAGE_BUCKET_NAME = secrets['AWS_STORAGE_BUCKET_NAME']
+AWS_S3_REGION_NAME = 'us-east-1'  # Replace with your region
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = 'public-read'
 
 FRONTEND_BASE_URL = "http://localhost:8000/api/account" # Replace with your frontend's actual base URL
 DEFAULT_FROM_EMAIL = "ondeyostephen0@gmail.com"
