@@ -163,6 +163,9 @@ CORS_ALLOW_ALL_ORIGINS = True #this is only for development
 
 ROOT_URLCONF = 'MUST.urls'
 
+
+
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',

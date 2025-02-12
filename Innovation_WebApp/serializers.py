@@ -8,6 +8,8 @@ import boto3
 from django.conf import settings
 import uuid
 
+
+
 from .utils import send_ticket_email
 import logging
 
@@ -38,6 +40,7 @@ class EventsSerializer(serializers.ModelSerializer):
         # Create the event instance
         event_instance = Events.objects.create(**validated_data)
         print(f"Event instance created with ID: {event_instance.id}")
+
 
         # Handle S3 upload if an image is provided
         if image_file:
