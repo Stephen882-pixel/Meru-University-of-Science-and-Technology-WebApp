@@ -36,8 +36,8 @@ SECRET_KEY = 'django-insecure-r@!9vmn+e&@q*s8%35r12_yb6fagra4x+*sb7+j0ik&&1an8z%
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
 
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver','7h3pspsq-8000.uks1.devtunnels.ms']  # Add 'testserver'
 REST_USE_JWT = True
 # Application definition
 
@@ -166,7 +166,7 @@ ROOT_URLCONF = 'MUST.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR/'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -295,9 +295,14 @@ JWT_ALGORITHM = "HS256"
 AWS_ACCESS_KEY_ID = secrets['AWS_ACCESS_KEY_ID']
 AWS_SECRET_ACCESS_KEY = secrets['AWS_SECRET_ACCESS_KEY']
 AWS_STORAGE_BUCKET_NAME = secrets['AWS_STORAGE_BUCKET_NAME']
-AWS_S3_REGION_NAME = 'us-east-1'  # Replace with your region
-AWS_S3_FILE_OVERWRITE = False
-AWS_DEFAULT_ACL = 'public-read'
+AWS_S3_REGION_NAME = ['AWS_S3_REGION_NAME']
+AWS_S3_FILE_OVERWRITE = secrets['AWS_S3_FILE_OVERWRITE']
+AWS_S3_SIGNATURE_VERSION = secrets['AWS_S3_SIGNATURE_VERSION']
+AWS_REGION = ['AWS_REGION']
 
-FRONTEND_BASE_URL = "http://localhost:8000/api/account" # Replace with your frontend's actual base URL
+ 
+
+
+
+FRONTEND_BASE_URL = "https:/7h3pspsq-8000.uks1.devtunnels.ms/api/account"
 DEFAULT_FROM_EMAIL = "ondeyostephen0@gmail.com"

@@ -1,4 +1,4 @@
-from django.core.mail import send_mail
+from django.core.mail import send_mail,EmailMessage
 from django.template.loader import render_to_string
 
 def send_ticket_email(registration):
@@ -12,20 +12,16 @@ def send_ticket_email(registration):
     }
 
     subject = f'Event Ticket: {registration.event.name}'
-    message = f"""
-    Event Ticket Details:
-    Ticket Number: {ticket_details['ticket_number']}
-    Event: {ticket_details['event_name']}
-    Date: {ticket_details['event_date']}
-    Location: {ticket_details['event_location']}
-    Registered By: {ticket_details['participant_name']}
-    """
-    
-    send_mail(
-        subject,
-        message,
-        'ondeyostephen0@gmail.com',  # From email
-        [registration.email],    # To email
-        fail_silently=False,
+    message = render_to_string('emails/ticket_email.hml',ticket_details) 
+
+    email = EmailMessage(
+        subject=subject,
+        body=message,
+        from_email='ondeyostephen0@gmail.com',
+        to=[registration.email]
     )
+    email.content_subtype = "html"
+    
+    
+    email.send()
     

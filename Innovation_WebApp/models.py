@@ -28,7 +28,7 @@ class Events(models.Model):
     category=models.CharField(max_length=10,choices=CATEGORY_CHOICE,null=False,default='Web Development')
     title = models.CharField(max_length=200)
     description = models.TextField()
-    image = models.URLField(default="event_images/default.png")  # S3 image URL will be stored here
+    image_url = models.URLField(default="event_images/default.png") # S3 image URL will be stored here
     date = models.DateTimeField()
     location = models.CharField(max_length=255)
     organizer = models.CharField(max_length=100)

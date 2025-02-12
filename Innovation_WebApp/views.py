@@ -1,5 +1,6 @@
 import csv
-from django.http import HttpResponse
+from django.conf import settings
+from django.http import HttpResponse, JsonResponse
 from rest_framework import viewsets, views, status,permissions
 from rest_framework.response import Response
 from .serializers import CommunityJoinSerializer, CommunityMemberSerializer, CommunitySessionSerializer, SubscribedUsersSerializer, EventsSerializer,EventRegistrationSerializer,CommunityProfileSerializer,TestimonialSerializer
@@ -25,8 +26,17 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.http import HttpResponse
 import pandas as pd
+from rest_framework.parsers import MultiPartParser, FormParser
+import logging
+logger = logging.getLogger(__name__)
+from rest_framework.parsers import MultiPartParser, FormParser
+from django.core.files.uploadedfile import InMemoryUploadedFile
+import boto3
 
-
+from .models import Events  # Assuming Events model is imported
+from .serializers import EventsSerializer  # Assuming EventsSerializer is imported
+from django.conf import settings
+s3_client = boto3.client('s3')
 class EventPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = 'page_size'
@@ -44,42 +54,90 @@ class EventPagination(PageNumberPagination):
             }
         })
 
+def generate_s3_image_url(bucket_name, object_key):
+    return f"https://{bucket_name}.s3.ap-southeast-2.amazonaws.com/{object_key}"
+
+
+
 #this is the event with s3 functionality   
 @method_decorator(csrf_exempt, name='dispatch') 
 class EventViewSet(viewsets.ModelViewSet):
     queryset = Events.objects.all()
     serializer_class = EventsSerializer
     pagination_class = EventPagination
+    parser_classes = (MultiPartParser, FormParser)
 
     @action(methods=['post'], detail=False, url_path='add', url_name='add-event')
-    def create_event(self,request,*args,**kwargs):
-        # check if there is an image in the request
-        image_file = request.FILES.get('image_field')
-        data = request.data.copy()
+    def create_event(self, request, *args, **kwargs):
+        # Debugging output
+        print("Files in request:", request.FILES)
+        print("Data in request:", request.data)
+        print("Content-Type:", request.content_type)
 
-        if image_file:
-            data['image_field'] = image_file
-        serializer=self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            try:
-                event_instance = serializer.save()
-                return Response({
-                    'message':'Event Created successfully',
-                    'status':'success',
-                    'data':EventsSerializer(event_instance).data
-                },status=status.HTTP_201_CREATED)
-            except Exception as e:
-                return Response({
-                    'message':'Event Creation Failed',
-                    'status':serializer.errors,
-                    'data':None
-                },status=status.HTTP_400_BAD_REQUEST)
-            return Response({
-                'message':'Event Creation failed',
-                'status':'failed',
-                'errors':serializer.errors,
-                'data':'None'
-            },status=status.HTTP_400_BAD_REQUEST)
+        # Extract form data and handle the file upload
+        file = request.FILES.get('image')
+        if not file:
+            return JsonResponse({
+                "message": "No image provided",
+                "status": "error"
+                }, status=400)
+        
+        bucket_name = settings.AWS_STORAGE_BUCKET_NAME
+        object_key = f"event_images/{file.name}"
+
+        # Upload image to S3
+        try:
+            s3_client.put_object(
+                Bucket=bucket_name,
+                Key=object_key,
+                Body=file.read(),
+                ContentType=file.content_type
+            )
+        except Exception as e:
+            return JsonResponse({
+                "message": f"Failed to upload image to S3: {str(e)}", 
+                "status": "error"
+                }, status=500)
+
+        # Create event
+        event_data = request.data
+        event = Events.objects.create(
+            name=event_data['name'],
+            category=event_data['category'],
+            title=event_data['title'],
+            description=event_data['description'],
+            date=event_data['date'],
+            location=event_data['location'],
+            organizer=event_data['organizer'],
+            contact_email=event_data['contact_email'],
+            is_virtual=event_data['is_virtual'],
+            image_url=f"event_images/{file.name}"  # Store the image path in the event
+        )
+
+        # Construct the image URL
+        image_url = generate_s3_image_url(bucket_name, object_key)
+
+        response_data = {
+            'message': 'Event Created successfully',
+            'status': 'success',
+            "data": {
+                "id": event.id,
+                "image_url": image_url,
+                "name": event.name,
+                "category": event.category,
+                "title": event.title,
+                "description": event.description,
+                "date": event.date,
+                "location": event.location,
+                "organizer": event.organizer,
+                "contact_email": event.contact_email,
+                "is_virtual": event.is_virtual,
+            }
+        }
+
+        return JsonResponse(response_data)
+
+    
     @action(methods=['put', 'patch'], detail=True, url_path='update', url_name='update-event')
     def update_event(self,request,*args,**kwargs):
         #partial = kwargs.pop('partial',False)
@@ -323,7 +381,7 @@ class EventRegistrationViewSet(viewsets.ModelViewSet):
             return Response({
                 'message': 'Successfully registered for the event',
                 'status': 'Success',
-                'data': None
+                'data': serializer.data
             }, status=status.HTTP_200_OK)
         
         error_messages = "\n".join(
@@ -374,35 +432,6 @@ class EventRegistrationViewSet(viewsets.ModelViewSet):
             ))
     
         return response
-
-def send_registration_confirmation(registration):
-    # Ticket email template
-    subject = f'Event Ticket - {registration.event.title}'
-    'Meru University Science Innovators Club <your_event_email@example.com>',
-    message = render_to_string('ticket_email.html', {
-        'registration': registration,
-        'ticket_number': registration.ticket_number,
-        'event': registration.event
-    })
-    
-    # Use the recipient's email address
-    recipient_email = registration.attendee.email  # Assuming you have the attendee's email
-    
-    send_mail(
-        subject,
-        message,
-        'Meru University Science Innovators Club <your_event_email@example.com>',  # Sender name and email
-        #[recipient_email],  # List of recipient emails
-        html_message=message
-    )
-
-
-
-def create(self, validated_data):
-    registration = super().create(validated_data)
-    send_registration_confirmation(registration)
-    return registration
-
 
 class CommunityProfileViewSet(viewsets.ModelViewSet):
     queryset = CommunityProfile.objects.all().order_by('id')

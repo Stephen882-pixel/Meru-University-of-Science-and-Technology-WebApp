@@ -6,3 +6,4 @@ with open("/home/ephy/Downloads/Meru-University-of-Science-and-Technology-WebApp
     base64_image = base64.b64encode(image_data).decode("utf-8")
 
     print(base64_image)
+    

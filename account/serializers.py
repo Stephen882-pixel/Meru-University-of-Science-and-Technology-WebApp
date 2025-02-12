@@ -79,6 +79,7 @@ class RegisterSerializer(serializers.Serializer):
             course=course
         )
         return user
+    
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()

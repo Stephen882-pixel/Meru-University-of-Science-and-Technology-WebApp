@@ -125,6 +125,14 @@ class LoginView(APIView):
             serializer.is_valid(raise_exception=True)
 
             user = serializer.validated_data['user']
+            # check if the user is verified
+            if not user.is_active:
+                return Response({
+                    'message':'Email not verified.Please verify your email.',
+                    'status':'error',
+                    'data':None
+                },status=status.HTTP_403_FORBIDDEN)
+            
             tokens = self.get_tokens_for_user(user)
             
             return Response({
@@ -139,7 +147,7 @@ class LoginView(APIView):
                 'message': f'Login processing failed',
                 'status': serializer.errors,
                 'data':None
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            }, status=status.HTTP_403_FORBIDDEN)
 
     def get_tokens_for_user(self, user):
         refresh = RefreshToken.for_user(user)
