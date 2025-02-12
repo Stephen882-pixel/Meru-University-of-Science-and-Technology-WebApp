@@ -267,6 +267,7 @@ class EventRegistrationViewSet(viewsets.ModelViewSet):
                 'status':'failed',
                 'data':None
             })
+        
     
     def list(self,request,*args,**kwargs):
         try:

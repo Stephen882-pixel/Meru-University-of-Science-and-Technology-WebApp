@@ -24,4 +24,3 @@ def send_ticket_email(registration):
     )
     email.attach_alternative(html_message, "text/html")
     email.send(fail_silently=False)
-

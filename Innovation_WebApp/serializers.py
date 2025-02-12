@@ -8,7 +8,6 @@ import boto3
 from django.conf import settings
 import uuid
 
-from .utils import send_ticket_email
 
 
 class SubscribedUsersSerializer(serializers.ModelSerializer):
