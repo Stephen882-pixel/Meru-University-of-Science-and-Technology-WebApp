@@ -36,9 +36,10 @@ import boto3
 from .models import Events  # Assuming Events model is imported
 from .serializers import EventsSerializer  # Assuming EventsSerializer is imported
 from django.conf import settings
+from django.shortcuts import get_object_or_404
 s3_client = boto3.client('s3')
 class EventPagination(PageNumberPagination):
-    page_size = 10
+    page_size = 10 
     page_size_query_param = 'page_size'
     max_page_size = 100
 
@@ -202,30 +203,35 @@ class EventViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'], url_path='view', url_name='view-event')
     def retrieve_event(self, request, *args, **kwargs):
         try:
-            
-            # Get the even ID from url kwargs
-            event_id = kwargs.get('pk')
-            if not event_id:
+
+            # check if name parameter is provided in querry params
+            event_name = request.query_params.get('name')
+            if event_name:
+                # Retrive by name
+                instance = get_object_or_404(self.get_queryset(),name__iexact=event_name)
+            else:
+                # Get the event ID from URL kwargs
+                event_id = kwargs.get('pk')
+                if not event_id:
+                    return Response({
+                        'message':'Event ID or name not provided',
+                        'status':'failed',
+                        'data':None
+                    },status=status.HTTP_400_BAD_REQUEST)
+                instance = self.get_serializer(instance)
                 return Response({
-                    'message':'Event ID not provided',
-                    'status':'failed',
-                    'data':None
-                },status=status.HTTP_400_BAD_REQUEST)
-            
-            instance = self.get_object()
-            serializer = self.get_serializer(instance)
-            return Response({
-                'message':'Event details fetched successfully',
-                'status':'success',
-                'data':serializer.data
-            },status=status.HTTP_200_OK)
+                    'message':'Event details fetched successfully',
+                    'status':'success',
+                    'data':serializer.data
+                },status=status.HTTP_200_OK)
         except Exception as e:
-            
             return Response({
                 'message':'Error fetching the event',
                 'status':'failed',
                 'data':None
             },status=status.HTTP_400_BAD_REQUEST)
+            
+     
     
 
 

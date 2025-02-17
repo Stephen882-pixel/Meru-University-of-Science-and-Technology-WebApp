@@ -41,6 +41,7 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver','7h3pspsq-8000.uks1.devt
 REST_USE_JWT = True
 # Application definition
 
+
 SITE_ID = 2
 
 
@@ -290,11 +291,6 @@ JWT_ALGORITHM = "HS256"
 
 
 
-# AWS_ACCESS_KEY_ID = secrets['AWS_ACCESS_KEY_ID']
-# AWS_SECRET_ACCESS_KEY = secrets['AWS_SECRET_ACCESS_KEY']
-# AWS_STORAGE_BUCKET_NAME = secrets['AWS_STORAGE_BUCKET_NAME']
-
-
 AWS_ACCESS_KEY_ID = secrets['AWS_ACCESS_KEY_ID']
 AWS_SECRET_ACCESS_KEY = secrets['AWS_SECRET_ACCESS_KEY']
 AWS_STORAGE_BUCKET_NAME = secrets['AWS_STORAGE_BUCKET_NAME']
@@ -307,5 +303,5 @@ AWS_REGION = ['AWS_REGION']
 
 
 
-FRONTEND_BASE_URL = "https:/7h3pspsq-8000.uks1.devtunnels.ms/api/account"
+FRONTEND_BASE_URL = "https://7h3pspsq-8000.uks1.devtunnels.ms/api/account"
 DEFAULT_FROM_EMAIL = "ondeyostephen0@gmail.com"
