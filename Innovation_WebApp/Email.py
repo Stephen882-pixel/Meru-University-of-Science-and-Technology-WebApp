@@ -15,12 +15,15 @@ def send_ticket_email(registration):
     subject = f'Event Ticket: {registration.event.name}'
     html_message = render_to_string('email/send_email.html', {'ticket_details': ticket_details})
     plain_message = strip_tags(html_message)
+    
 
     email = EmailMultiAlternatives(
         subject,
         plain_message,
         'ondeyostephen0@gmail.com',  # From email
+
         [registration.email]  # To email
     )
     email.attach_alternative(html_message, "text/html")
     email.send(fail_silently=False)
+

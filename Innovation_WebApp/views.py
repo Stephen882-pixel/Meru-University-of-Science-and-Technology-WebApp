@@ -288,6 +288,7 @@ class ContactView(views.APIView):
 
         return Response({'message_name': message_name}, status=status.HTTP_200_OK)
     
+
 class EventRegistrationViewSet(viewsets.ModelViewSet):
     queryset = EventRegistration.objects.all()
     serializer_class = EventRegistrationSerializer
@@ -330,6 +331,7 @@ class EventRegistrationViewSet(viewsets.ModelViewSet):
                 'status':'failed',
                 'data':None
             })
+        
     
     def list(self,request,*args,**kwargs):
         try:

@@ -27,3 +27,5 @@ def send_ticket_email(registration):
         [registration.email],    # To email
         fail_silently=False,
     )
+
+    
