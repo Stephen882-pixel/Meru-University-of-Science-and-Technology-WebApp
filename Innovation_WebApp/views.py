@@ -1,6 +1,6 @@
 import csv
 from django.conf import settings
-from django.http import HttpResponse, JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from rest_framework import viewsets, views, status,permissions
 from rest_framework.response import Response
 from .serializers import CommunityJoinSerializer, CommunityMemberSerializer, CommunitySessionSerializer, SubscribedUsersSerializer, EventsSerializer,EventRegistrationSerializer,CommunityProfileSerializer,TestimonialSerializer
@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.core.files.uploadedfile import InMemoryUploadedFile
 import boto3
+from django.db.models import Q 
 
 from .models import Events  # Assuming Events model is imported
 from .serializers import EventsSerializer  # Assuming EventsSerializer is imported
@@ -203,34 +204,67 @@ class EventViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'], url_path='view', url_name='view-event')
     def retrieve_event(self, request, *args, **kwargs):
         try:
+            instance = self.get_object()
+            serializer = self.get_serializer(instance)
 
-            # check if name parameter is provided in querry params
-            event_name = request.query_params.get('name')
-            if event_name:
-                # Retrive by name
-                instance = get_object_or_404(self.get_queryset(),name__iexact=event_name)
-            else:
-                # Get the event ID from URL kwargs
-                event_id = kwargs.get('pk')
-                if not event_id:
-                    return Response({
-                        'message':'Event ID or name not provided',
-                        'status':'failed',
-                        'data':None
-                    },status=status.HTTP_400_BAD_REQUEST)
-                instance = self.get_serializer(instance)
-                return Response({
-                    'message':'Event details fetched successfully',
-                    'status':'success',
-                    'data':serializer.data
-                },status=status.HTTP_200_OK)
+            return Response({
+                'message':'Event details fetched successfully',
+                'status':'success',
+                'data':serializer.data
+            },status=status.HTTP_200_OK)
+        except Http404:
+            return Response({
+                'message':'Event not found',
+                'status':'failed',
+                'data':None
+            },status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({
-                'message':'Error fetching the event',
+                'message':f'Error fetching thr event:{str(e)}',
                 'status':'failed',
                 'data':None
             },status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=['get'], url_path='by-name', url_name='event-by-name')
+    def get_event_by_name(self, request):
+        try:
+            event_name = request.query_params.get('name')
+            print(f"Searching for event with name: {event_name}")  # Debug print
             
+            if not event_name:
+                return Response({
+                    'message': 'Name parameter is required',
+                    'status': 'failed',
+                    'data': None
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            instance = Events.objects.filter(
+                Q(name__iexact=event_name) |
+                Q(name__icontains=event_name)
+            ).first()
+            
+            if not instance:
+                return Response({
+                    'message': f'Event with name "{event_name}" not found',
+                    'status': 'failed',
+                    'data': None
+                }, status=status.HTTP_404_NOT_FOUND)
+
+            serializer = self.get_serializer(instance)
+            
+            return Response({
+                'message': 'Event details fetched successfully',
+                'status': 'success',
+                'data': serializer.data
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            print(f"Error in get_event_by_name: {str(e)}")  # Debug print
+            return Response({
+                'message': f'Error fetching the event: {str(e)}',
+                'status': 'failed',
+                'data': None
+            }, status=status.HTTP_400_BAD_REQUEST)
      
     
 
@@ -379,10 +413,37 @@ class EventRegistrationViewSet(viewsets.ModelViewSet):
                 'status': 'failed',
                 'data': None
             }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        # Get email from request data
+        email = request.data.get('email')
+        if not email:
+            return Response({
+                'message':'Email is required for registration',
+                'status':'failed',
+                'data':None
+            },status=status.HTTP_400_BAD_REQUEST)
+        
+        
+        # check for existig registrations  using email and event_id
+        existing_registrations = EventRegistration.objects.filter(
+            event_id = event_pk,
+            email=email
+        ).exists()
+
+        if existing_registrations:
+            return Response({
+                'message':'You have already registered for this event',
+                'status':'failed',
+                'data':None
+            },status=status.HTTP_400_BAD_REQUEST)
+        
+
 
         mutable_data = request.data.copy()
         mutable_data['event'] = event_pk
+
         serializer = self.get_serializer(data=mutable_data)
+        
 
         if serializer.is_valid():
             serializer.save()

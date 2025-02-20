@@ -38,6 +38,9 @@ class Events(models.Model):
 
     def __str__(self):
         return self.title
+   
+
+
     
 
 class EventRegistration(models.Model):
@@ -64,6 +67,9 @@ class EventRegistration(models.Model):
 
     def __str__(self):
         return f"{self.full_name} - {self.event.name}"
+    
+    class Meta:
+        unique_together = ['email','event']
     
     
 class CommunityProfile(models.Model):
