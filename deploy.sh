@@ -56,7 +56,7 @@ validate_github_repo() {
     repo_url=$(git remote get-url origin 2>/dev/null)
     if [ -z "$repo_url" ]; then
         echo -e "${RED}Error: No GitHub remote found. Please add a remote:"
-        echo -e "  git remote add origin https://github.com/Stephen882-pixel/Meru-University-of-Science-and-Technology-WebApp.git${NC}"
+        echo -e "  git remote add origin https://github.com/Stephen882-pixel/Meru-University-of-Science-and-Technology-WebApp$"
         exit 1
     fi
 
