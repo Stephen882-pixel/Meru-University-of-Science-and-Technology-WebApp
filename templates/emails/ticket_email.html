@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* Reset styles */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f5f5f5;
+        }
+
+        /* Container */
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 30px 0;
+            background: linear-gradient(135deg, #1a237e, #0d47a1);
+            color: white;
+            border-radius: 8px 8px 0 0;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Content */
+        .content {
+            padding: 0 30px;
+        }
+
+        .welcome-message {
+            font-size: 20px;
+            color: #1a237e;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        /* Event Details */
+        .event-details {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .event-details h2 {
+            color: #1a237e;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        .detail-item {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .detail-label {
+            font-weight: bold;
+            min-width: 100px;
+            color: #555555;
+        }
+
+        .detail-value {
+            color: #333333;
+        }
+
+        /* Instructions */
+        .instructions {
+            background-color: #e3f2fd;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .instructions h2 {
+            color: #1a237e;
+            margin-top: 0;
+            font-size: 20px;
+        }
+
+        .instructions ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 10px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background-color: #f5f5f5;
+            border-radius: 0 0 8px 8px;
+            font-size: 14px;
+            color: #666666;
+        }
+
+        /* Button */
+        .cta-button {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: #1a237e;
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .cta-button:hover {
+            background-color: #0d47a1;
+        }
+
+        /* Responsive */
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                padding: 10px;
+            }
+            
+            .content {
+                padding: 0 15px;
+            }
+            
+            .header {
+                padding: 20px 0;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>Event Ticket</h1>
+        </div>
+        
+        <div class="content">
+            <div class="welcome-message">
+                Dear {{ ticket_details.participant_name }},
+            </div>
+            
+            <div class="event-details">
+                <h2>Ticket Details</h2>
+                <div class="detail-item">
+                    <span class="detail-label">Ticket Number:</span>
+                    <span class="detail-value">{{ ticket_details.ticket_number }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Event Name:</span>
+                    <span class="detail-value">{{ ticket_details.event_name }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Event Date:</span>
+                    <span class="detail-value">{{ ticket_details.event_date }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Event Location:</span>
+                    <span class="detail-value">{{ ticket_details.event_location }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Registration Timestamp:</span>
+                    <span class="detail-value">{{ ticket_details.registration_timestamp }}</span>
+                </div>
+            </div>
+            
+            <div class="instructions">
+                <h2>Important Information</h2>
+                <ul>
+                    <li>Your ticket is attached to this email in PDF format</li>
+                    <li>Please bring your ticket (either printed or digital) to the event</li>
+                    <li>Arrive at least 15 minutes before the event starts</li>
+                    <li>The QR code on your ticket will be scanned at entry</li>
+                </ul>
+            </div>
+            
+            <a href="{{ event_url }}" class="cta-button">Add to Calendar</a>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; 2023 Meru University of Science and Technology. All rights reserved.</p>
+            <p>This is an automated message. Please do not reply to this email.</p>
+            <p>If you have any questions, please contact our support team.</p>
+        </div>
+    </div>
+</body>
+</html>
