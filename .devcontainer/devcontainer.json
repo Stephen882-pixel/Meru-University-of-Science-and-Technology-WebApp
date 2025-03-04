@@ -1,0 +1,21 @@
+{
+    "name": "Django REST API Dev Container",
+    "build": {
+        "dockerfile": "Dockerfile.dev",
+        "context": ".."
+    },
+    "forwardPorts": [8000],
+    "mounts": [
+        "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock"
+    ],
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-azuretools.vscode-docker",
+                "ms-python.python",
+                "github.vscode-pull-request-github" // GitHub CLI support
+            ]
+        }
+    },
+    "runArgs": ["--init"]
+}
