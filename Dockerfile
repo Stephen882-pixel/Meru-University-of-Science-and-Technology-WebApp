@@ -54,6 +54,9 @@ RUN find /app -type d -exec chmod 755 {} \; && \
     find /app -type f -exec chmod 644 {} \; && \
     chmod 755 /app/manage.py
 
+# Ensure Django is installed in the runtime environment
+RUN pip install --user django
+
 USER django
 
 # Collect static files and migrate database
@@ -62,6 +65,3 @@ RUN python manage.py collectstatic --noinput --clear && \
 
 # Application ports
 EXPOSE 8000
-
-# Production server (adjust based on your WSGI/ASGI setup)
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "project.wsgi:application"]
