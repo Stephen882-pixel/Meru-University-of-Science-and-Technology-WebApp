@@ -1,37 +1,47 @@
 # Build stage
-FROM python:3.11-slim-bookworm as builder
+FROM python:3.11-slim-bookworm as django-builder
 
 WORKDIR /app
+
+# Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1
 
-# Install system build dependencies
+# Install build dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     gcc \
     python3-dev \
-    libpq-dev && \
+    libpq-dev \
+    libssl-dev \
+    ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
+# Create virtual environment and install dependencies
 COPY requirements.txt .
-RUN pip install --user --no-cache-dir -r requirements.txt
-
+RUN python3 -m venv /app/virtual && \
+    /app/virtual/bin/pip install --upgrade pip && \
+    /app/virtual/bin/pip install --no-cache-dir -r requirements.txt && \
+    /app/virtual/bin/pip install dotenv && \
+    /app/virtual/bin/pip install psycopg2-binary && \
+    /app/virtual/bin/pip install celery
 
 # Runtime stage
 FROM python:3.11-slim-bookworm
 
+# Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    DJANGO_SETTINGS_MODULE=project.settings.production \
-    PATH="/home/django/.local/bin:$PATH" \
-    PYTHONPATH="/app:$PYTHONPATH" \
+    DJANGO_SETTINGS_MODULE=MUST.settings \
+    VIRTUAL_ENV=/app/virtual \
+    PATH="/app/virtual/bin:$PATH" \
+    PYTHONPATH="/app" \
     PYTHONOPTIMIZE=1
 
 WORKDIR /app
 
-# Install runtime system dependencies
+# Install runtime dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     libpq5 \
@@ -40,28 +50,22 @@ RUN apt-get update && \
 
 # Create non-root user
 RUN groupadd -g 1000 django && \
-    useradd -u 1000 -g django -d /app -s /bin/false django && \
-    chown django:django /app
+    useradd -u 1000 -g django -d /app -s /bin/bash django
 
-# Copy Python dependencies from builder
-COPY --from=builder --chown=django:django /root/.local /home/django/.local
-
-# Copy application code
+# Copy virtual environment and project files
+COPY --from=django-builder --chown=django:django /app/virtual /app/virtual
 COPY --chown=django:django . .
 
-# Security hardening
-RUN find /app -type d -exec chmod 755 {} \; && \
-    find /app -type f -exec chmod 644 {} \; && \
-    chmod 755 /app/manage.py
+# Set permissions
+RUN find /app/virtual -type d -exec chmod 755 {} \; && \
+    find /app/virtual -type f -exec chmod 644 {} \;
 
-# Ensure Django is installed in the runtime environment
-RUN pip install --user django
+# Verify project structure
+RUN ls /app
 
+# Switch to non-root user
 USER django
 
-# Collect static files and migrate database
-RUN python manage.py collectstatic --noinput --clear && \
-    python manage.py migrate --noinput
-
-# Application ports
+# Expose port and set CMD
 EXPOSE 8000
+CMD ["/app/virtual/bin/python", "manage.py", "runserver", "0.0.0.0:8000"]   
